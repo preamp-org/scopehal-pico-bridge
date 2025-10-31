@@ -69,8 +69,8 @@ void help()
 string g_model;
 string g_serial;
 string g_fwver;
+size_t g_series;
 
-PicoScopeType g_pico_type;
 int16_t g_hScope = 0;
 size_t g_numChannels = 0;
 
@@ -87,6 +87,8 @@ int main(int argc, char* argv[])
 {
 	//Global settings
 	Severity console_verbosity = Severity::NOTICE;
+	bool limitChannels = false;
+	g_series = 0;
 
 	//Parse command-line arguments
 	uint16_t scpi_port = 5025;
@@ -125,7 +127,8 @@ int main(int argc, char* argv[])
 	}
 
 	//Set up logging
-	g_log_sinks.emplace(g_log_sinks.begin(), new ColoredSTDLogSink(console_verbosity));
+	//g_log_sinks.emplace(g_log_sinks.begin(), new ColoredSTDLogSink(console_verbosity));
+	g_log_sinks.emplace(g_log_sinks.begin(), new STDLogSink(console_verbosity));
 
 	//For now, open the first instrument we can find.
 	//TODO: implement device selection logic
@@ -133,29 +136,66 @@ int main(int argc, char* argv[])
 	auto status = ps6000aOpenUnit(&g_hScope, NULL, PICO_DR_8BIT);
 	if(PICO_OK != status)
 	{
-		LogNotice("Looking for a PicoScope 3000 series instrument to open...\n");
-		status = ps3000aOpenUnit(&g_hScope, NULL);
-		if(status == PICO_POWER_SUPPLY_NOT_CONNECTED)
+		LogNotice("Looking for a PicoScope 5000 series instrument to open...\n");
+		status = ps5000aOpenUnit(&g_hScope, NULL, PS5000A_DR_8BIT);
+		if( (status == PICO_POWER_SUPPLY_NOT_CONNECTED) or (status == PICO_USB3_0_DEVICE_NON_USB3_0_PORT) )
 		{
 			// switch to USB power
 			// TODO: maybe require the user to specify this is ok
+			limitChannels = true;
 			LogNotice("Switching to USB power...\n");
-			status = ps3000aChangePowerSource(g_hScope, PICO_POWER_SUPPLY_NOT_CONNECTED);
+			status = ps5000aChangePowerSource(g_hScope, PICO_POWER_SUPPLY_NOT_CONNECTED);
 		}
 		if(PICO_OK != status)
 		{
-			LogError("Failed to open unit (code %d)\n", status);
-			return 1;
+			LogNotice("Looking for a PicoScope 4000 series instrument to open...\n");
+			status = ps4000aOpenUnit(&g_hScope, NULL);
+			if(status == PICO_POWER_SUPPLY_NOT_CONNECTED)
+			{
+				// switch to USB power
+				// only applies to model 4444
+				limitChannels = true;
+				LogNotice("Switching to USB power...\n");
+				status = ps4000aChangePowerSource(g_hScope, PICO_POWER_SUPPLY_NOT_CONNECTED);
+			}
+			if(PICO_OK != status)
+			{
+				LogNotice("Looking for a PicoScope 3000 series instrument to open...\n");
+				status = ps3000aOpenUnit(&g_hScope, NULL);
+				if(status == PICO_POWER_SUPPLY_NOT_CONNECTED)
+				{
+					// switch to USB power
+					// TODO: maybe require the user to specify this is ok
+					limitChannels = true;
+					LogNotice("Switching to USB power...\n");
+					status = ps3000aChangePowerSource(g_hScope, PICO_POWER_SUPPLY_NOT_CONNECTED);
+				}
+				if(PICO_OK != status)
+				{
+					LogError("Failed to open unit (code %d)\n", status);
+					return 1;
+				}
+				else
+				{
+					g_series = 3;
+					picoGetUnitInfo = ps3000aGetUnitInfo;
+				}
+			}
+			else
+			{
+				g_series = 4;
+				picoGetUnitInfo = ps4000aGetUnitInfo;
+			}
 		}
 		else
 		{
-			g_pico_type = PICO3000A;
-			picoGetUnitInfo = ps3000aGetUnitInfo;
+			g_series = 5;
+			picoGetUnitInfo = ps5000aGetUnitInfo;
 		}
 	}
 	else
 	{
-		g_pico_type = PICO6000A;
+		g_series = 6;
 		picoGetUnitInfo = ps6000aGetUnitInfo;
 	}
 
@@ -244,17 +284,27 @@ int main(int argc, char* argv[])
 			LogVerbose("IPP version:      %s\n", buf);
 	}
 
-	g_numChannels = g_model[1] - '0';
+	//Limit to two channels only while on USB power
+	if(limitChannels)
+		g_numChannels = '2' - '0';
+	else
+		g_numChannels = g_model[1] - '0';
 
 	//Initial channel state setup
 	for(size_t i=0; i<g_numChannels; i++)
 	{
-		switch(g_pico_type)
+		switch(g_series)
 		{
-			case PICO3000A:
+			case 3:
 				ps3000aSetChannel(g_hScope, (PS3000A_CHANNEL)i, 0, PS3000A_DC, PS3000A_1V, 0.0f);
 				break;
-			case PICO6000A:
+			case 4:
+				ps4000aSetChannel(g_hScope, (PS4000A_CHANNEL)i, 0, PS4000A_DC, PICO_X1_PROBE_1V, 0.0f);
+				break;
+			case 5:
+				ps5000aSetChannel(g_hScope, (PS5000A_CHANNEL)i, 0, PS5000A_DC, PS5000A_1V, 0.0f);
+				break;
+			case 6:
 				ps6000aSetChannelOff(g_hScope, (PICO_CHANNEL)i);
 				break;
 		}
@@ -267,15 +317,19 @@ int main(int argc, char* argv[])
 		g_coupling[i] = PICO_DC;
 		g_range[i] = PICO_X1_PROBE_1V;
 		g_range_3000a[i] = PS3000A_1V;
+		g_range_4000a[i] = PS4000A_1V;
+		g_range_5000a[i] = PS5000A_1V;
 		g_offset[i] = 0;
 		g_bandwidth[i] = PICO_BW_FULL;
-		g_bandwidth_legacy[i] = PS3000A_BW_FULL;
+		g_bandwidth_3000a[i] = PS3000A_BW_FULL;
+		g_bandwidth_4000a[i] = PS4000A_BW_FULL;
+		g_bandwidth_5000a[i] = PS5000A_BW_FULL;
 	}
 
 	//Figure out digital channel configuration
-	switch(g_pico_type)
+	switch(g_series)
 	{
-		case PICO3000A:
+		case 3:
 			/* Model 3abcdMSO with
 				a=4 chan, b=0(unknown) c=6(bandwidth 6=200MHz) d=D(revision D)
 				MSO if MSO option is available
@@ -291,7 +345,25 @@ int main(int argc, char* argv[])
 			}
 			break;
 
-		case PICO6000A:
+		//No digital options for 4000 series.
+		
+		case 5:
+			/* Model 5abcdMSO with
+				a=4 chan, b=4(flexres up to 16bit) c=4(bandwidth 4=200MHz) d=D(revision D)
+				MSO if MSO option is available
+				example 5444DMSO (full option)
+			*/
+			if(g_model.find("MSO") != string::npos)
+			{
+				g_numDigitalPods = 2;
+			}
+			else
+			{
+				g_numDigitalPods = 0;
+			}
+			break;
+
+		case 6:
 			g_numDigitalPods = 2;
 			break;
 
@@ -347,12 +419,18 @@ int main(int argc, char* argv[])
 	}
 
 	//Done
-	switch(g_pico_type)
+	switch(g_series)
 	{
-		case PICO3000A:
+		case 3:
 			ps3000aCloseUnit(g_hScope);
 			break;
-		case PICO6000A:
+		case 4:
+			ps4000aCloseUnit(g_hScope);
+			break;
+		case 5:
+			ps5000aCloseUnit(g_hScope);
+			break;
+		case 6:
 			ps6000aCloseUnit(g_hScope);
 			break;
 	}
@@ -371,12 +449,18 @@ void OnQuit(int /*signal*/)
 	LogNotice("Shutting down...\n");
 
 	lock_guard<mutex> lock(g_mutex);
-	switch (g_pico_type)
+	switch (g_series)
 	{
-		case PICO3000A:
+		case 3:
 			ps3000aCloseUnit(g_hScope);
 			break;
-		case PICO6000A:
+		case 4:
+			ps4000aCloseUnit(g_hScope);
+			break;
+		case 5:
+			ps5000aCloseUnit(g_hScope);
+			break;
+		case 6:
 			ps6000aCloseUnit(g_hScope);
 			break;
 	}

@@ -29,21 +29,21 @@ As of October 2025, there should be a total of **72** different devices supporte
 
 | ps3000a | ps4000a | ps5000a | ps6000a |
 | :---- | :---- | :---- | :---- |
-| 3203D | 4444 | 5242A | 6403E |
+| 3203D | ~~4444~~ | 5242A | 6403E |
 | 3203D MSO | **4824** | 5242B | 6404E |
-| 3204A | 4224A | 5242D | 6405E |
-| 3204B | 4424A | 5242D MSO | 6406E |
-| 3204 MSO | 4824A | 5243A | 6424E |
+| ~~3204A~~ | 4224A | 5242D | 6405E |
+| ~~3204B~~ | 4424A | 5242D MSO | 6406E |
+| ~~3204 MSO~~ | 4824A | 5243A | 6424E |
 | 3204D |  | 5243B | 6425E |
 | 3204D MSO |  | 5243D | 6426E |
-| 3205A |  | 5243D MSO | 6428E-D |
-| 3205B |  | 5244A | 6804E |
-| 3205 MSO |  | 5244B | **6824E** |
+| ~~3205A~~ |  | 5243D MSO | 6428E-D |
+| ~~3205B~~ |  | 5244A | 6804E |
+| ~~3205 MSO~~ |  | 5244B | **6824E** |
 | 3205D |  | 5244D |  |
 | 3205D MSO |  | 5244D MSO |  |
-| 3206A |  | 5442A |  |
-| 3206B |  | 5442B |  |
-| 3206 MSO |  | 5442D |  |
+| ~~3206A~~ |  | 5442A |  |
+| ~~3206B~~ |  | 5442B |  |
+| ~~3206 MSO~~ |  | 5442D |  |
 | 3206D |  | 5442D MSO |  |
 | 3206D MSO |  | 5443A |  |
 | 3207A |  | 5443B |  |
@@ -64,6 +64,7 @@ As of October 2025, there should be a total of **72** different devices supporte
 | 3406D MSO |  |  |  |
 
 Models shown in bold were used for, and tested during, the development of the pico-bridge.
+Models striked out need some additional work and are not fully supported yet.
 
 
 ## How to compile

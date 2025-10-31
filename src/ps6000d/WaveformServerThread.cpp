@@ -72,9 +72,13 @@ void WaveformServerThread()
 		int16_t ready;
 		{
 			lock_guard<mutex> lock(g_mutex);
-			if(g_pico_type == PICO6000A)
+			if(g_series == 6)
 				ps6000aIsReady(g_hScope, &ready);
-			else if(g_pico_type == PICO3000A)
+			else if(g_series == 5)
+				ps5000aIsReady(g_hScope, &ready);
+			else if(g_series == 4)
+				ps4000aIsReady(g_hScope, &ready);
+			else if(g_series == 3)
 				ps3000aIsReady(g_hScope, &ready);
 		}
 
@@ -97,9 +101,13 @@ void WaveformServerThread()
 
 			//Stop the trigger
 			PICO_STATUS status = PICO_OPERATION_FAILED;
-			if(g_pico_type == PICO6000A)
+			if(g_series == 6)
 				status = ps6000aStop(g_hScope);
-			else if(g_pico_type == PICO3000A)
+			else if(g_series == 5)
+				status = ps5000aStop(g_hScope);
+			else if(g_series == 4)
+				status = ps4000aStop(g_hScope);
+			else if(g_series == 3)
 				status = ps3000aStop(g_hScope);
 			if(PICO_OK != status)
 				LogFatal("ps6000aStop failed (code 0x%x)\n", status);
@@ -114,10 +122,16 @@ void WaveformServerThread()
 				//Clear out old buffers
 				for(auto ch : g_channelIDs)
 				{
-					if(g_pico_type == PICO6000A)
+					if(g_series == 6)
 						ps6000aSetDataBuffer(g_hScope, ch, NULL,
 											 0, PICO_INT16_T, 0, PICO_RATIO_MODE_RAW, PICO_CLEAR_ALL);
-					else if(g_pico_type == PICO3000A)
+					else if(g_series == 5)
+						ps5000aSetDataBuffer(g_hScope, (PS5000A_CHANNEL)ch, NULL,
+											 0, 0, PS5000A_RATIO_MODE_NONE);
+					else if(g_series == 4)
+						ps4000aSetDataBuffer(g_hScope, (PS4000A_CHANNEL)ch, NULL,
+											 0, 0, PS4000A_RATIO_MODE_NONE);
+					else if(g_series == 3)
 						ps3000aSetDataBuffer(g_hScope, (PS3000A_CHANNEL)ch, NULL,
 											 0, 0, PS3000A_RATIO_MODE_NONE);
 				}
@@ -142,10 +156,16 @@ void WaveformServerThread()
 
 					//Give it to the scope, removing any other buffer we might have
 					auto ch = g_channelIDs[i];
-					if(g_pico_type == PICO6000A)
+					if(g_series == 6)
 						status = ps6000aSetDataBuffer(g_hScope, (PICO_CHANNEL)ch, waveformBuffers[i],
 													  g_captureMemDepth, PICO_INT16_T, 0, PICO_RATIO_MODE_RAW, PICO_ADD);
-					else if(g_pico_type == PICO3000A)
+					else if(g_series == 5)
+						status = ps5000aSetDataBuffer(g_hScope, (PS5000A_CHANNEL)ch, waveformBuffers[i],
+													  g_captureMemDepth, 0, PS5000A_RATIO_MODE_NONE);
+					else if(g_series == 4)
+						status = ps4000aSetDataBuffer(g_hScope, (PS4000A_CHANNEL)ch, waveformBuffers[i],
+													  g_captureMemDepth, 0, PS4000A_RATIO_MODE_NONE);
+					else if(g_series == 3)
 						status = ps3000aSetDataBuffer(g_hScope, (PS3000A_CHANNEL)ch, waveformBuffers[i],
 													  g_captureMemDepth, 0, PS3000A_RATIO_MODE_NONE);
 					if(status != PICO_OK)
@@ -159,10 +179,23 @@ void WaveformServerThread()
 			numSamples = g_captureMemDepth;
 			numSamples_int = g_captureMemDepth;
 			int16_t overflow = 0;
-			if(g_pico_type == PICO6000A)
+			if(g_series == 6)
 				status = ps6000aGetValues(g_hScope, 0, &numSamples, 1, PICO_RATIO_MODE_RAW, 0, &overflow);
-			else if(g_pico_type == PICO3000A)
+			else if(g_series == 5)
+			{
+				status = ps5000aGetValues(g_hScope, 0, &numSamples_int, 1, PS5000A_RATIO_MODE_NONE, 0, &overflow);
+				numSamples = numSamples_int;
+			}
+			else if(g_series == 4)
+			{
+				status = ps4000aGetValues(g_hScope, 0, &numSamples_int, 1, PS4000A_RATIO_MODE_NONE, 0, &overflow);
+				numSamples = numSamples_int;
+			}
+			else if(g_series == 3)
+			{
 				status = ps3000aGetValues(g_hScope, 0, &numSamples_int, 1, PS3000A_RATIO_MODE_NONE, 0, &overflow);
+				numSamples = numSamples_int;
+			}
 			if(status == PICO_NO_SAMPLES_AVAILABLE)
 				continue; // state changed while mutex was unlocked?
 			if(PICO_OK != status)
@@ -180,7 +213,9 @@ void WaveformServerThread()
 				if(g_msoPodEnabledDuringArm[i])
 					numchans ++;
 			}
-
+			//LogVerbose("numSamples_int:       %d\n", numSamples_int);
+			//LogVerbose("g_captureMemDepth:       %lld\n", g_captureMemDepth);
+			//LogVerbose("waveformBuffers:       %hs\n", waveformBuffers[0]);
 
 		}
 
@@ -231,7 +266,7 @@ void WaveformServerThread()
 
 					chdrs.nchan = i;
 					chdrs.numSamples = numSamples;
-					chdrs.scale = g_roundedRange[i] / 32512;
+					chdrs.scale = g_roundedRange[i] / g_scaleValue;
 					chdrs.offset = g_offsetDuringArm[i];
 					chdrs.trigphase = trigphase;
 
@@ -300,7 +335,8 @@ float InterpolateTriggerTime(int16_t* buf)
 {
 	if(g_triggerSampleIndex <= 0)
 		return 0;
-
+	
+	//TODO trigger scale value depends on ADC setting and is different for EXT trig input
 	float trigscale = g_roundedRange[g_triggerChannel] / 32512;
 	float trigoff = g_offsetDuringArm[g_triggerChannel];
 
