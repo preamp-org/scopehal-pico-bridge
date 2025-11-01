@@ -661,6 +661,10 @@ bool PicoSCPIServer::OnCommand(
 			{
 				lock_guard<mutex> lock(g_mutex);
 				g_awgFreq = stof(args[0]);
+				//Frequency must not be zero
+				if(g_awgFreq<1e-3)
+					g_awgFreq = 1;
+				
 				switch(g_series)
 				{
 					case 3:
@@ -1439,6 +1443,7 @@ void PicoSCPIServer::SetChannelEnabled(size_t chIndex, bool enabled)
 
 	//We need to allocate new buffers for this channel
 	g_memDepthChanged = true;
+	UpdateTrigger(); //TESTING lasse
 }
 
 void PicoSCPIServer::SetAnalogCoupling(size_t chIndex, const std::string& coupling)
@@ -1874,21 +1879,41 @@ void PicoSCPIServer::SetSampleRate(uint64_t rate_hz)
 			period_ns = 1e9 / rate_hz;
 
 			//Find closest timebase setting
-			//TODO:
-			//!! This part is applicable to the following devices:
-			//!!   PicoScope 3000A and 3000B Series 4-Channel USB 2.0 Oscilloscopes
-			//!!   PicoScope 3207A and 3207B USB 3.0 Oscilloscopes
-			//!!   PicoScope 3000D Series USB 3.0 Oscilloscopes and MSOs
-			//!! A different implementation is needed for:
-			//!!   PicoScope 3000A and 3000B Series 2-Channel USB 2.0 Oscilloscopes
-			//!! And another one for:
-			//!!   PicoScope 3000 Series USB 2.0 MSOs
-			if(period_ns < 2)
-				timebase = 0;
-			else if(period_ns < 8)
-				timebase = round(log(1e9/rate_hz)/log(2));
+			if( (g_model[1]=='2') and (g_model[4]=='A' or g_model[4]=='B') )
+			{
+				//!! A different implementation is needed for:
+				//!!   PicoScope 3000A and 3000B Series 2-Channel USB 2.0 Oscilloscopes
+				if(period_ns < 4)
+					timebase = 0;
+				else if(period_ns < 16)
+					timebase = round(log(5e8/rate_hz)/log(2));
+				else
+					timebase = round((625e5/rate_hz)+2);
+			}
+			if( (g_model.find("MSO") != string::npos) and (g_model[4]!='D') )
+			{
+				//!! And another one for:
+				//!!   PicoScope 3000 Series USB 2.0 MSOs
+				if(period_ns < 4)
+					timebase = 0;
+				else if(period_ns < 8)
+					timebase = round(log(5e8/rate_hz)/log(2));
+				else
+					timebase = round((125e6/rate_hz)+1);
+			}
 			else
-				timebase = round((125e6/rate_hz)+2);
+			{
+				//!! This part is applicable to the following devices:
+				//!!   PicoScope 3000A and 3000B Series 4-Channel USB 2.0 Oscilloscopes
+				//!!   PicoScope 3207A and 3207B USB 3.0 Oscilloscopes
+				//!!   PicoScope 3000D Series USB 3.0 Oscilloscopes and MSOs
+				if(period_ns < 2)
+					timebase = 0;
+				else if(period_ns < 8)
+					timebase = round(log(1e9/rate_hz)/log(2));
+				else
+					timebase = round((125e6/rate_hz)+2);
+			}
 		}
 		break;
 
@@ -1896,10 +1921,20 @@ void PicoSCPIServer::SetSampleRate(uint64_t rate_hz)
 		{
 			//Convert sample rate to sample period
 			g_sampleInterval = 1e15 / rate_hz;
+			period_ns = 1e9 / rate_hz;
 
 			//Find closest timebase setting
-			//TODO add support for 4444
-			timebase = trunc((80e6/rate_hz)-1);
+			if(g_model.find("4444") != string::npos)
+			{
+				if(period_ns < 5)
+					timebase = 0;
+				else if(period_ns < 40)
+					timebase = round(log(4e8/rate_hz)/log(2));
+				else
+					timebase = round((50e6/rate_hz)+2);
+			}
+			else
+				timebase = trunc((80e6/rate_hz)-1);
 		}
 		break;
 
@@ -1991,6 +2026,7 @@ void PicoSCPIServer::SetSampleRate(uint64_t rate_hz)
 
 	g_timebase = timebase;
 	g_sampleRate = rate_hz;
+	UpdateTrigger(); //TESTING lasse
 }
 
 void PicoSCPIServer::SetSampleDepth(uint64_t depth)
@@ -2192,6 +2228,7 @@ void UpdateTrigger(bool force)
 	{
 		timeout = 1;
 		g_lastTriggerWasForced = true;
+		g_triggerOneShot = true; //TESTING lasse
 	}
 	else
 		g_lastTriggerWasForced = false;
@@ -2309,36 +2346,34 @@ void UpdateTrigger(bool force)
 			}
 			else
 			{
-				/* TODO PICO3000A Trigger Digital Chan */
-				LogError("PICO3000A Trigger Digital Chan code TODO\n");
-				/*
 				//Remove old trigger conditions
-				ps6000aSetTriggerChannelConditions(
+				ps3000aSetTriggerChannelConditionsV2(
 					g_hScope,
 					NULL,
-					0,
-					PICO_CLEAR_ALL);
+					0);
 
 				//Set up new conditions
 				int ntrig = g_triggerChannel - g_numChannels;
-				int trigpod = ntrig / 8;
+				//int trigpod = ntrig / 8;
 				int triglane = ntrig % 8;
-				PICO_CONDITION cond;
-				cond.source = static_cast<PICO_CHANNEL>(PICO_PORT0 + trigpod);
-				cond.condition = PICO_CONDITION_TRUE;
-				ps6000aSetTriggerChannelConditions(
+				PS3000A_TRIGGER_CONDITIONS_V2 cond;
+				cond.digital = PS3000A_CONDITION_TRUE;
+				//cond.external = PS3000A_CONDITION_FALSE;
+				//cond.channelA = PS3000A_CONDITION_FALSE;
+				//cond.channelB = PS3000A_CONDITION_FALSE;
+				//cond.channelC = PS3000A_CONDITION_FALSE;
+				//cond.channelD = PS3000A_CONDITION_FALSE;
+				ps3000aSetTriggerChannelConditionsV2(
 					g_hScope,
 					&cond,
-					1,
-					PICO_ADD);
+					1);
 
 				//Set up configuration on the selected channel
-				PICO_DIGITAL_CHANNEL_DIRECTIONS dirs;
-				dirs.channel = static_cast<PICO_PORT_DIGITAL_CHANNEL>(PICO_PORT_DIGITAL_CHANNEL0 + triglane);
-				dirs.direction = PICO_DIGITAL_DIRECTION_RISING;				//TODO: configurable
-				ps6000aSetTriggerDigitalPortProperties(
+				PS3000A_DIGITAL_CHANNEL_DIRECTIONS dirs;
+				dirs.channel = static_cast<PS3000A_DIGITAL_CHANNEL>(PS3000A_DIGITAL_CHANNEL_0 + triglane);
+				dirs.direction = PS3000A_DIGITAL_DIRECTION_RISING;				//TODO: configurable
+				ps3000aSetTriggerDigitalPortProperties(
 					g_hScope,
-					cond.source,
 					&dirs,
 					1);
 
@@ -2346,7 +2381,6 @@ void UpdateTrigger(bool force)
 				//Should we call ps6000aSetTriggerChannelProperties with no elements to do this?
 				if(force)
 					LogWarning("Force trigger doesn't currently work if trigger source is digital\n");
-				*/
 			}
 		}
 		break;
@@ -2355,18 +2389,7 @@ void UpdateTrigger(bool force)
 		{
 			if(g_triggerChannel == PICO_TRIGGER_AUX)
 			{
-				/* TODO PICO_TRIGGER_AUX PICO3000A similarly to PICO6000A... */
-				/* API is same as 6000a API */
-				int ret = ps4000aSetSimpleTrigger(
-							  g_hScope,
-							  1,
-							  (PS4000A_CHANNEL)PICO_TRIGGER_AUX,
-							  0,
-							  (enPS4000AThresholdDirection)g_triggerDirection,
-							  delay,
-							  timeout);
-				if(ret != PICO_OK)
-					LogError("ps4000aSetSimpleTrigger failed: %x\n", ret);
+				LogError("PS4000 has no external trigger input\n");
 			}
 			else if(g_triggerChannel < g_numChannels)
 			{
@@ -2384,8 +2407,7 @@ void UpdateTrigger(bool force)
 			}
 			else
 			{
-				/* TODO PICO3000A Trigger Digital Chan */
-				LogError("PICO4000A Trigger Digital Chan code TODO\n");
+				LogError("PS4000 has no digital trigger option\n");
 
 			}
 		}
@@ -2422,8 +2444,39 @@ void UpdateTrigger(bool force)
 			}
 			else
 			{
-				/* TODO PICO3000A Trigger Digital Chan */
-				LogError("PICO5000A Trigger Digital Chan code TODO\n");
+				//Remove old trigger conditions
+				ps5000aSetTriggerChannelConditionsV2(
+					g_hScope,
+					NULL,
+					0,
+					PS5000A_CLEAR);
+
+				//Set up new conditions
+				int ntrig = g_triggerChannel - g_numChannels;
+				int trigpod = ntrig / 8;
+				int triglane = ntrig % 8;
+				PS5000A_CONDITION cond;
+				cond.source = static_cast<PS5000A_CHANNEL>(PS5000A_DIGITAL_PORT0 + trigpod);
+				cond.condition = PS5000A_CONDITION_TRUE;
+				ps5000aSetTriggerChannelConditionsV2(
+					g_hScope,
+					&cond,
+					1,
+					PS5000A_ADD);
+
+				//Set up configuration on the selected channel
+				PS5000A_DIGITAL_CHANNEL_DIRECTIONS dirs;
+				dirs.channel = static_cast<PS5000A_DIGITAL_CHANNEL>(PS5000A_DIGITAL_CHANNEL_0 + triglane);
+				dirs.direction = PS5000A_DIGITAL_DIRECTION_RISING;				//TODO: configurable
+				ps5000aSetTriggerDigitalPortProperties(
+					g_hScope,
+					&dirs,
+					1);
+
+				//ps6000aSetTriggerDigitalPortProperties doesn't have a timeout!
+				//Should we call ps6000aSetTriggerChannelProperties with no elements to do this?
+				if(force)
+					LogWarning("Force trigger doesn't currently work if trigger source is digital\n");
 			}
 		}
 		break;

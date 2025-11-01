@@ -112,12 +112,16 @@ void WaveformServerThread()
 			if(PICO_OK != status)
 				LogFatal("ps6000aStop failed (code 0x%x)\n", status);
 
+auto now = chrono::system_clock::now();
+auto duration = now.time_since_epoch();
+uint64_t ts = chrono::duration_cast<chrono::milliseconds>(duration).count();
+LogVerbose("%lli -- psIsReady: %i\n", ts, ready);
 			//Verify it's actually stopped
 
 			//Set up buffers if needed
 			if(g_memDepthChanged || waveformBuffers.empty())
 			{
-				LogTrace("Reallocating buffers\n");
+				LogVerbose("Reallocating buffers\n");
 
 				//Clear out old buffers
 				for(auto ch : g_channelIDs)
@@ -197,7 +201,12 @@ void WaveformServerThread()
 				numSamples = numSamples_int;
 			}
 			if(status == PICO_NO_SAMPLES_AVAILABLE)
+			{
+LogVerbose("PICO_NO_SAMPLES_AVAILABLE\n");
+				g_memDepthChanged = true; //TESTING lasse flush buffers and disarm
+				g_triggerArmed = false;	//TESTING lasse on adding 2nd channel
 				continue; // state changed while mutex was unlocked?
+			}
 			if(PICO_OK != status)
 				LogFatal("psXXXXGetValues (code 0x%x)\n", status);
 
@@ -269,6 +278,11 @@ void WaveformServerThread()
 					chdrs.scale = g_roundedRange[i] / g_scaleValue;
 					chdrs.offset = g_offsetDuringArm[i];
 					chdrs.trigphase = trigphase;
+					
+auto now = chrono::system_clock::now();
+auto duration = now.time_since_epoch();
+uint64_t ts = chrono::duration_cast<chrono::milliseconds>(duration).count();
+//LogVerbose("%lli  Channel: %lli, numSamples: %lli\n", ts, i, numSamples);
 
 					//Send channel headers
 					if(!client.SendLooped((uint8_t*)&chdrs, sizeof(chdrs)))
@@ -308,7 +322,10 @@ void WaveformServerThread()
 
 			//Re-arm the trigger if doing repeating triggers
 			if(g_triggerOneShot)
+			{
 				g_triggerArmed = false;
+LogVerbose("Disarm g_triggerOneShot\n");
+			}
 			else
 			{
 				if(g_captureMemDepth != g_memDepth)
@@ -316,6 +333,7 @@ void WaveformServerThread()
 
 				//Restart
 				StartCapture(false);
+LogVerbose("Restart Capture\n");
 			}
 		}
 	}
