@@ -43,12 +43,6 @@
 		[1|2]D:PRESENT?
 			Returns 1 = MSO pod present, 0 = MSO pod not present
 
-		[chan]:BWLIM [freq]
-			Sets the channel's bandwith limiter to freq in MHz, 0 for full bandwidth.
-
-		[chan]:BWLIM?
-			Returns the channel's bandwith limiter frequency in MHz, 0 for full bandwidth.
-
 		[chan]:COUP [DC1M|AC1M|DC50]
 			Sets channel coupling
 
@@ -382,44 +376,6 @@ bool PicoSCPIServer::OnQuery(
 			}
 		}
 	}
-
-	else if(cmd == "BWLIM")
-	{
-		lock_guard<mutex> lock(g_mutex);
-		string ret = "0";
-		
-		switch(g_series)
-		{
-			case 3:
-			{
-				if(g_bandwidth_3000a[channelId] == PS3000A_BW_20MHZ)
-					ret = "20";
-				break;
-			}
-			case 4:
-			{
-				if(g_bandwidth_4000a[channelId] == PS4000A_BW_1MHZ)
-					ret = "1";
-				break;
-			}
-			case 5:
-			{
-				if(g_bandwidth_5000a[channelId] == PS5000A_BW_20MHZ)
-					ret = "20";
-				break;
-			}
-			case 6:
-			{
-				if(g_bandwidth[channelId] == PICO_BW_20MHZ)
-					ret = "20";
-				else if(g_bandwidth[channelId] == PICO_BW_200MHZ)
-					ret = "200";
-				break;
-			}
-		}
-		SendReply(ret);
-	}
-
 	else
 	{
 		LogDebug("Unrecognized query received: %s\n", line.c_str());
@@ -1060,20 +1016,6 @@ bool PicoSCPIServer::OnCommand(
 	}
 
 	//TODO: bandwidth limiter
-	else if( (cmd == "BWLIM") && (args.size() == 1) )
-	{
-		//Extract channel ID from subject and clamp bounds
-		size_t channelId = 0;
-		if(isalpha(subject[0]))
-		{
-			channelId = min(static_cast<size_t>(subject[0] - 'A'), g_numChannels);
-			//channelIsDigital = false;
-		}
-		lock_guard<mutex> lock(g_mutex);
-		
-		int freq_mhz = stoi(args[0]);
-		SetChannelBandwidthLimiter(channelId, freq_mhz);
-	}
 
 	else
 	{
@@ -1087,54 +1029,6 @@ bool PicoSCPIServer::OnCommand(
 	}
 
 	return true;
-}
-
-void PicoSCPIServer::SetChannelBandwidthLimiter(size_t chan, unsigned int limit_mhz)
-{
-	
-	switch(g_series)
-	{
-		case 3:
-		{
-			if(limit_mhz == 20)
-				g_bandwidth_3000a[chan] = PS3000A_BW_20MHZ;
-			else
-				g_bandwidth_3000a[chan] = PS3000A_BW_FULL;
-			break;
-		}
-		case 4:
-		{
-			//if(limit_mhz == 20000)
-			//	g_bandwidth_4000a[chan] = PS4000A_BW_20KHZ;
-			//else if(limit_mhz == 100000)
-			//	g_bandwidth_4000a[chan] = PS4000A_BW_100KHZ;
-			if(limit_mhz == 1)
-				g_bandwidth_4000a[chan] = PS4000A_BW_1MHZ;
-			else
-				g_bandwidth_4000a[chan] = PS4000A_BW_FULL;
-			break;
-		}
-		case 5:
-		{
-			if(limit_mhz == 20)
-				g_bandwidth_5000a[chan] = PS5000A_BW_20MHZ;
-			else
-				g_bandwidth_5000a[chan] = PS5000A_BW_FULL;
-			break;
-		}
-		case 6:
-		{
-			if(limit_mhz == 20)
-				g_bandwidth[chan] = PICO_BW_20MHZ;
-			else if(limit_mhz == 200)
-				g_bandwidth[chan] = PICO_BW_200MHZ;
-			else
-				g_bandwidth[chan] = PICO_BW_FULL;
-			break;
-		}
-	}
-
-	UpdateChannel(chan);
 }
 
 /**
@@ -1573,7 +1467,6 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 	size_t channelId = chIndex & 0xff;
 	//range_V is peak-to-peak whereas the Pico modes are V-peak,
 	//i.e. PS5000_20V = +-20V = 40Vpp = 'range_V = 40'
-	//auto range = range_V/2;
 	auto range = range_V/2;
 
 	switch(g_series)
@@ -1854,6 +1747,8 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 		}
 		break;
 	}
+
+	//SetAnalogOffset(channelId, g_offset[channelId]);
 
 	UpdateChannel(channelId);
 
@@ -2540,8 +2435,8 @@ void UpdateTrigger(bool force)
 							  g_hScope,
 							  1,
 							  (PS5000A_CHANNEL)g_triggerChannel,
-							  trunc(trig_code),
-							  (PS5000A_THRESHOLD_DIRECTION)g_triggerDirection,
+							  round(trig_code),
+							  (enPS5000AThresholdDirection)g_triggerDirection, // same as 6000a api
 							  delay,
 							  timeout);
 				if(ret != PICO_OK)
@@ -2768,7 +2663,6 @@ void StartCapture(bool stopFirst, bool force)
 	//If previous trigger was forced, we need to reconfigure the trigger to be not-forced now
 	if(g_lastTriggerWasForced && !force)
 	{
-		g_triggerOneShot = false; //TESTING lasse
 		Stop();
 		UpdateTrigger();
 	}

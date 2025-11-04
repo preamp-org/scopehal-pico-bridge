@@ -16,7 +16,7 @@ Socket servers for Pico Technology instruments allowing remote access via libsco
    * Nickname: (choose a display name for your scope.)
    * Driver: **pico**
    * Transport: **twinlan**
-   * Path: **localhost:5024:5025**
+   * Path: **localhost:5025:5026**
 4. Click Add.
 5. If this is your first time using ngscopeclient, continue reading [the tutorial here](https://www.ngscopeclient.org/manual/Tutorials.html).
 

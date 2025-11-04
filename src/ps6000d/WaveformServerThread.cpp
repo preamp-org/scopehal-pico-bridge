@@ -112,16 +112,12 @@ void WaveformServerThread()
 			if(PICO_OK != status)
 				LogFatal("ps6000aStop failed (code 0x%x)\n", status);
 
-auto now = chrono::system_clock::now();
-auto duration = now.time_since_epoch();
-uint64_t ts = chrono::duration_cast<chrono::milliseconds>(duration).count();
-LogVerbose("%lli -- psIsReady: %i\n", ts, ready);
 			//Verify it's actually stopped
 
 			//Set up buffers if needed
 			if(g_memDepthChanged || waveformBuffers.empty())
 			{
-				LogVerbose("Reallocating buffers\n");
+				//LogVerbose("Reallocating buffers\n");
 
 				//Clear out old buffers
 				for(auto ch : g_channelIDs)
@@ -202,10 +198,13 @@ LogVerbose("%lli -- psIsReady: %i\n", ts, ready);
 			}
 			if(status == PICO_NO_SAMPLES_AVAILABLE)
 			{
-LogVerbose("PICO_NO_SAMPLES_AVAILABLE\n");
+				LogVerbose("PICO_NO_SAMPLES_AVAILABLE\n");
 				g_memDepthChanged = true; //TESTING lasse flush buffers and disarm
-				g_triggerArmed = false;	//TESTING lasse on adding 2nd channel
-				continue; // state changed while mutex was unlocked?
+				UpdateTrigger(true); //TESTING lasse
+				//This response will occur if some setting like vertical scale changed just before aGetValues.
+				//Allow some more time for the scope to become responsive again.
+				std::this_thread::sleep_for(std::chrono::microseconds(100000)); //TESTING lasse
+				continue;
 			}
 			if(PICO_OK != status)
 				LogFatal("psXXXXGetValues (code 0x%x)\n", status);
@@ -222,10 +221,6 @@ LogVerbose("PICO_NO_SAMPLES_AVAILABLE\n");
 				if(g_msoPodEnabledDuringArm[i])
 					numchans ++;
 			}
-			//LogVerbose("numSamples_int:       %d\n", numSamples_int);
-			//LogVerbose("g_captureMemDepth:       %lld\n", g_captureMemDepth);
-			//LogVerbose("waveformBuffers:       %hs\n", waveformBuffers[0]);
-
 		}
 
 		//Do *not* hold mutex while sending data to the client
@@ -279,11 +274,6 @@ LogVerbose("PICO_NO_SAMPLES_AVAILABLE\n");
 					chdrs.offset = g_offsetDuringArm[i];
 					chdrs.trigphase = trigphase;
 					
-auto now = chrono::system_clock::now();
-auto duration = now.time_since_epoch();
-uint64_t ts = chrono::duration_cast<chrono::milliseconds>(duration).count();
-//LogVerbose("%lli  Channel: %lli, numSamples: %lli\n", ts, i, numSamples);
-
 					//Send channel headers
 					if(!client.SendLooped((uint8_t*)&chdrs, sizeof(chdrs)))
 						break;
@@ -324,7 +314,6 @@ uint64_t ts = chrono::duration_cast<chrono::milliseconds>(duration).count();
 			if(g_triggerOneShot)
 			{
 				g_triggerArmed = false;
-LogVerbose("Disarm g_triggerOneShot\n");
 			}
 			else
 			{
@@ -333,7 +322,6 @@ LogVerbose("Disarm g_triggerOneShot\n");
 
 				//Restart
 				StartCapture(false);
-LogVerbose("Restart Capture\n");
 			}
 		}
 	}
