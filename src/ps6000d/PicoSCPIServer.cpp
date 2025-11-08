@@ -1570,58 +1570,57 @@ void PicoSCPIServer::SetAnalogCoupling(size_t chIndex, const std::string& coupli
 void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 {
 	lock_guard<mutex> lock(g_mutex);
+	
 	size_t channelId = chIndex & 0xff;
 	//range_V is peak-to-peak whereas the Pico modes are V-peak,
 	//i.e. PS5000_20V = +-20V = 40Vpp = 'range_V = 40'
-	//auto range = range_V/2;
-	auto range = range_V/2;
 
 	switch(g_series)
 	{
 		case 3:
 		{
 			//3000D series uses passive probes only, 20mV to 20V, no 50 ohm mode available
-			if(range > 10)
+			if(range_V > 20)
 			{
 				g_range_3000a[channelId] = PS3000A_20V;
 				g_roundedRange[channelId] = 20;
 			}
-			else if(range > 5)
+			else if(range_V > 10)
 			{
 				g_range_3000a[channelId] = PS3000A_10V;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range > 2)
+			else if(range_V > 5)
 			{
 				g_range_3000a[channelId] = PS3000A_5V;
 				g_roundedRange[channelId] = 5;
 			}
-			else if(range > 1)
+			else if(range_V > 2)
 			{
 				g_range_3000a[channelId] = PS3000A_2V;
 				g_roundedRange[channelId] = 2;
 			}
-			else if(range > 0.5)
+			else if(range_V > 1)
 			{
 				g_range_3000a[channelId] = PS3000A_1V;
 				g_roundedRange[channelId] = 1;
 			}
-			else if(range > 0.2)
+			else if(range_V > 0.5)
 			{
 				g_range_3000a[channelId] = PS3000A_500MV;
 				g_roundedRange[channelId] = 0.5;
 			}
-			else if(range > 0.1)
+			else if(range_V > 0.2)
 			{
 				g_range_3000a[channelId] = PS3000A_200MV;
 				g_roundedRange[channelId] = 0.2;
 			}
-			else if(range > 0.05)
+			else if(range_V > 0.1)
 			{
 				g_range_3000a[channelId] = PS3000A_100MV;
 				g_roundedRange[channelId] = 0.1;
 			}
-			else if(range > 0.02)
+			else if(range_V > 0.05)
 			{
 				g_range_3000a[channelId] = PS3000A_50MV;
 				g_roundedRange[channelId] = 0.05;
@@ -1637,67 +1636,67 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 		case 4:
 		{
 			//4000 series uses passive probes only, 10mV to 50V, no 50 ohm mode available
-			if(range > 20)
+			if(range_V > 50)
 			{
 				g_range_4000a[channelId] = PS4000A_50V;
 				g_range[channelId] = PICO_X1_PROBE_50V;
 				g_roundedRange[channelId] = 50;
 			}
-			else if(range > 10)
+			else if(range_V > 20)
 			{
 				g_range_4000a[channelId] = PS4000A_20V;
 				g_range[channelId] = PICO_X1_PROBE_20V;
 				g_roundedRange[channelId] = 20;
 			}
-			else if(range > 5)
+			else if(range_V > 10)
 			{
 				g_range_4000a[channelId] = PS4000A_10V;
 				g_range[channelId] = PICO_X1_PROBE_10V;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range > 2)
+			else if(range_V > 5)
 			{
 				g_range_4000a[channelId] = PS4000A_5V;
 				g_range[channelId] = PICO_X1_PROBE_5V;
 				g_roundedRange[channelId] = 5;
 			}
-			else if(range > 1)
+			else if(range_V > 2)
 			{
 				g_range_4000a[channelId] = PS4000A_2V;
 				g_range[channelId] = PICO_X1_PROBE_2V;
 				g_roundedRange[channelId] = 2;
 			}
-			else if(range > 0.5)
+			else if(range_V > 1)
 			{
 				g_range_4000a[channelId] = PS4000A_1V;
 				g_range[channelId] = PICO_X1_PROBE_1V;
 				g_roundedRange[channelId] = 1;
 			}
-			else if(range > 0.2)
+			else if(range_V > 0.5)
 			{
 				g_range_4000a[channelId] = PS4000A_500MV;
 				g_range[channelId] = PICO_X1_PROBE_500MV;
 				g_roundedRange[channelId] = 0.5;
 			}
-			else if(range > 0.1)
+			else if(range_V > 0.2)
 			{
 				g_range_4000a[channelId] = PS4000A_200MV;
 				g_range[channelId] = PICO_X1_PROBE_200MV;
 				g_roundedRange[channelId] = 0.2;
 			}
-			else if(range > 0.05)
+			else if(range_V > 0.1)
 			{
 				g_range_4000a[channelId] = PS4000A_100MV;
 				g_range[channelId] = PICO_X1_PROBE_100MV;
 				g_roundedRange[channelId] = 0.1;
 			}
-			else if(range > 0.02)
+			else if(range_V > 0.05)
 			{
 				g_range_4000a[channelId] = PS4000A_50MV;
 				g_range[channelId] = PICO_X1_PROBE_50MV;
 				g_roundedRange[channelId] = 0.05;
 			}
-			else if(range > 0.01)
+			else if(range_V > 0.02)
 			{
 				g_range_4000a[channelId] = PS4000A_20MV;
 				g_range[channelId] = PICO_X1_PROBE_20MV;
@@ -1715,52 +1714,52 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 		case 5:
 		{
 			//5000D series uses passive probes only, 10mV to 20V, no 50 ohm mode available
-			if(range > 10)
+			if(range_V > 20)
 			{
 				g_range_5000a[channelId] = PS5000A_20V;
 				g_roundedRange[channelId] = 20;
 			}
-			else if(range > 5)
+			else if(range_V > 10)
 			{
 				g_range_5000a[channelId] = PS5000A_10V;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range > 2)
+			else if(range_V > 5)
 			{
 				g_range_5000a[channelId] = PS5000A_5V;
 				g_roundedRange[channelId] = 5;
 			}
-			else if(range > 1)
+			else if(range_V > 2)
 			{
 				g_range_5000a[channelId] = PS5000A_2V;
 				g_roundedRange[channelId] = 2;
 			}
-			else if(range > 0.5)
+			else if(range_V > 1)
 			{
 				g_range_5000a[channelId] = PS5000A_1V;
 				g_roundedRange[channelId] = 1;
 			}
-			else if(range > 0.2)
+			else if(range_V > 0.5)
 			{
 				g_range_5000a[channelId] = PS5000A_500MV;
 				g_roundedRange[channelId] = 0.5;
 			}
-			else if(range > 0.1)
+			else if(range_V > 0.2)
 			{
 				g_range_5000a[channelId] = PS5000A_200MV;
 				g_roundedRange[channelId] = 0.2;
 			}
-			else if(range > 0.05)
+			else if(range_V > 0.1)
 			{
 				g_range_5000a[channelId] = PS5000A_100MV;
 				g_roundedRange[channelId] = 0.1;
 			}
-			else if(range > 0.02)
+			else if(range_V > 0.05)
 			{
 				g_range_5000a[channelId] = PS5000A_50MV;
 				g_roundedRange[channelId] = 0.05;
 			}
-			else if(range > 0.01)
+			else if(range_V > 0.02)
 			{
 				g_range_5000a[channelId] = PS5000A_20MV;
 				g_roundedRange[channelId] = 0.02;
@@ -1779,69 +1778,69 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 			//Model 6428E-D is 50 ohm only and has a limited range.
 			//If 50 ohm coupling, cap hardware voltage range to 5V
 			if(g_coupling[channelId] == PICO_DC_50OHM)
-				range = min(range, 5.0);
+				range_V = min(range_V, 5.0);
 
-			if(range > 100)
+			if(range_V > 200)
 			{
 				g_range[channelId] = PICO_X1_PROBE_200V;
 				g_roundedRange[channelId] = 200;
 			}
-			else if(range > 50)
+			else if(range_V > 100)
 			{
 				g_range[channelId] = PICO_X1_PROBE_100V;
 				g_roundedRange[channelId] = 100;
 			}
-			else if(range > 20)
+			else if(range_V > 50)
 			{
 				g_range[channelId] = PICO_X1_PROBE_50V;
 				g_roundedRange[channelId] = 50;
 			}
-			else if(range > 10)
+			else if(range_V > 20)
 			{
 				g_range[channelId] = PICO_X1_PROBE_20V;
 				g_roundedRange[channelId] = 20;
 			}
-			else if(range > 5)
+			else if(range_V > 10)
 			{
 				g_range[channelId] = PICO_X1_PROBE_10V;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range > 2)
+			else if(range_V > 5)
 			{
 				g_range[channelId] = PICO_X1_PROBE_5V;
 				g_roundedRange[channelId] = 5;
 			}
-			else if(range > 1)
+			else if(range_V > 2)
 			{
 				g_range[channelId] = PICO_X1_PROBE_2V;
 				g_roundedRange[channelId] = 2;
 			}
-			else if(range > 0.5)
+			else if(range_V > 1)
 			{
 				g_range[channelId] = PICO_X1_PROBE_1V;
 				g_roundedRange[channelId] = 1;
 			}
-			else if(range > 0.2)
+			else if(range_V > 0.5)
 			{
 				g_range[channelId] = PICO_X1_PROBE_500MV;
 				g_roundedRange[channelId] = 0.5;
 			}
-			else if(range > 0.1)
+			else if(range_V > 0.2)
 			{
 				g_range[channelId] = PICO_X1_PROBE_200MV;
 				g_roundedRange[channelId] = 0.2;
 			}
-			else if(range >= 0.05)
+			else if(range_V > 0.1)
 			{
 				g_range[channelId] = PICO_X1_PROBE_100MV;
 				g_roundedRange[channelId] = 0.1;
 			}
-			else if(range >= 0.02)
+			else if(range_V > 0.05)
 			{
 				g_range[channelId] = PICO_X1_PROBE_50MV;
 				g_roundedRange[channelId] = 0.05;
 			}
-			else if(range >= 0.01)
+			else if(range_V > 0.02)
 			{
 				g_range[channelId] = PICO_X1_PROBE_20MV;
 				g_roundedRange[channelId] = 0.02;
@@ -1855,6 +1854,8 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 		break;
 	}
 
+	//We need to allocate new buffers for this channel
+	g_memDepthChanged = true;
 	UpdateChannel(channelId);
 
 	//Update trigger if this is the trigger channel.
@@ -2256,7 +2257,6 @@ void UpdateChannel(size_t chan)
 			//TODO: handle multi-input triggers
 			if(chan == g_triggerChannel)
 				UpdateTrigger();
-			return;
 		}
 		break;
 
@@ -2274,7 +2274,6 @@ void UpdateChannel(size_t chan)
 			//TODO: handle multi-input triggers
 			if(chan == g_triggerChannel)
 				UpdateTrigger();
-			return;
 		}
 		break;
 
@@ -2287,12 +2286,13 @@ void UpdateChannel(size_t chan)
 			ps5000aMaximumValue(g_hScope, &scaleVal);
 			g_scaleValue = scaleVal;
 
+			//LogDebug(" - UpdateChannel %zu, range %f, scaleVal %d \n", chan, g_roundedRange[chan], scaleVal);
+
 			//We use software triggering based on raw ADC codes.
 			//Any time we change the frontend configuration on the trigger channel, it has to be reconfigured.
 			//TODO: handle multi-input triggers
 			if(chan == g_triggerChannel)
 				UpdateTrigger();
-			return;
 		}
 		break;
 
@@ -2759,7 +2759,8 @@ PICO_STATUS StartInternal()
 			return ps6000aRunBlock(g_hScope, nPreTrigger, nPostTrigger, g_timebase, NULL, 0, NULL, NULL);
 
 		default:
-			return PICO_OK;
+			//return PICO_OK;
+			return PICO_CANCELLED;
 	}
 }
 

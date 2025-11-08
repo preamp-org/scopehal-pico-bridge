@@ -199,11 +199,11 @@ void WaveformServerThread()
 			if(status == PICO_NO_SAMPLES_AVAILABLE)
 			{
 				LogVerbose("PICO_NO_SAMPLES_AVAILABLE\n");
-				g_memDepthChanged = true; //TESTING lasse flush buffers and disarm
-				UpdateTrigger(true); //TESTING lasse
 				//This response will occur if some setting like vertical scale changed just before aGetValues.
 				//Allow some more time for the scope to become responsive again.
 				std::this_thread::sleep_for(std::chrono::microseconds(100000)); //TESTING lasse
+				g_memDepthChanged = true; //TESTING lasse flush buffers and disarm
+				UpdateTrigger(true); //TESTING lasse
 				continue;
 			}
 			if(PICO_OK != status)
