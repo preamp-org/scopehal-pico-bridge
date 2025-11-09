@@ -203,6 +203,7 @@ float g_awgRange = 0;
 float g_awgOffset = 0;
 bool g_awgOn = false;
 double g_awgFreq = 1000;
+int32_t g_awgBufferSize = 8192;
 PS3000A_EXTRA_OPERATIONS g_awgPS3000AOperation = PS3000A_ES_OFF;    // Noise and PRBS generation is not a WaveType
 PS3000A_WAVE_TYPE g_awgPS3000AWaveType = PS3000A_SINE;              // Waveform must be set in ReconfigAWG(), holds the WaveType;
 PS4000A_EXTRA_OPERATIONS g_awgPS4000AOperation = PS4000A_ES_OFF;
@@ -232,13 +233,12 @@ const map<string, WaveformType> g_waveformTypes =
 	{"GAUSSIAN",   {PICO_GAUSSIAN,   PS3000A_GAUSSIAN,   PS3000A_ES_OFF,     PS4000A_GAUSSIAN,   PS4000A_ES_OFF,     PS5000A_GAUSSIAN,    PS5000A_ES_OFF}},
 	{"HALF_SINE",  {PICO_HALF_SINE,  PS3000A_HALF_SINE,  PS3000A_ES_OFF,     PS4000A_HALF_SINE,  PS4000A_ES_OFF,     PS5000A_HALF_SINE,   PS5000A_ES_OFF}},
 	{"DC",         {PICO_DC_VOLTAGE, PS3000A_DC_VOLTAGE, PS3000A_ES_OFF,     PS4000A_DC_VOLTAGE, PS4000A_ES_OFF,     PS5000A_DC_VOLTAGE,  PS5000A_ES_OFF}},
-	{"WHITENOISE", {PICO_WHITENOISE, PS3000A_SINE,       PS3000A_WHITENOISE, PS4000A_SINE,       PS4000A_WHITENOISE, PS5000A_WHITE_NOISE, PS5000A_ES_OFF}},
+	{"WHITENOISE", {PICO_WHITENOISE, PS3000A_SINE,       PS3000A_WHITENOISE, PS4000A_SINE,       PS4000A_WHITENOISE, PS5000A_SINE,        PS5000A_WHITENOISE}},
 	{"PRBS",       {PICO_PRBS,       PS3000A_SINE,       PS3000A_PRBS,       PS4000A_SINE,       PS4000A_PRBS,       PS5000A_SINE,        PS5000A_PRBS  }},
 	{"ARBITRARY",  {PICO_ARBITRARY,  PS3000A_MAX_WAVE_TYPES, PS3000A_ES_OFF, PS4000A_MAX_WAVE_TYPES, PS4000A_ES_OFF, PS5000A_MAX_WAVE_TYPES, PS5000A_ES_OFF}}       //FIX: PS3000A_MAX_WAVE_TYPES is used as placeholder for arbitrary generation till a better workaround is found
 };
 
-#define SIG_GEN_BUFFER_SIZE         8192                            //TODO: allow model specific/variable buffer size. Must be power of 2 for most AWGs PS3000: 2^13,  PS3207B: 2^14  PS3206B: 2^15
-int16_t* g_arbitraryWaveform = new int16_t[SIG_GEN_BUFFER_SIZE];    //
+int16_t* g_arbitraryWaveform;
 void GenerateSquareWave(int16_t* &waveform, size_t bufferSize, double dutyCycle, int16_t amplitude = 32767);
 void ReconfigAWG();
 
@@ -251,6 +251,42 @@ PicoSCPIServer::PicoSCPIServer(ZSOCKET sock)
 	//external trigger is fixed range of -1 to +1V
 	g_roundedRange[PICO_TRIGGER_AUX] = 2;
 	g_offset[PICO_TRIGGER_AUX] = 0;
+
+	//set model dependent AWG buffer size
+	switch(g_series)
+	{
+		case 3:
+		{
+			g_awgBufferSize = 32768;
+			if( (g_model.find("06A") != string::npos) || (g_model.find("06B") != string::npos) )
+				g_awgBufferSize = 16384;
+			if( (g_model.find("05A") != string::npos) || (g_model.find("05B") != string::npos) )
+				g_awgBufferSize = 8192;
+			if( (g_model.find("04A") != string::npos) || (g_model.find("04B") != string::npos) )
+				g_awgBufferSize = 8192;
+			break;
+		}
+		case 4:
+		{
+			g_awgBufferSize = 16384;
+			break;
+		}
+		case 5:
+		{
+			g_awgBufferSize = 32768;
+			if(g_model.find("42B") != string::npos)
+				g_awgBufferSize = 16384;
+			if(g_model.find("44B") != string::npos)
+				g_awgBufferSize = 49152;
+			break;
+		}
+		case 6:
+		{
+			g_awgBufferSize = 40960;
+			break;
+		}
+	}
+	g_arbitraryWaveform = new int16_t[g_awgBufferSize];
 }
 
 PicoSCPIServer::~PicoSCPIServer()
@@ -635,6 +671,7 @@ bool PicoSCPIServer::OnCommand(
 
 				g_awgRange = tempRange;
 				g_awgOffset = tempOffset;
+				g_awgOn = false;
 			}
 			else if(g_series == 4)
 			{
@@ -663,6 +700,7 @@ bool PicoSCPIServer::OnCommand(
 
 				g_awgRange = tempRange;
 				g_awgOffset = tempOffset;
+				g_awgOn = false;
 			}
 			else if(g_series == 5)
 			{
@@ -691,6 +729,7 @@ bool PicoSCPIServer::OnCommand(
 
 				g_awgRange = tempRange;
 				g_awgOffset = tempOffset;
+				g_awgOn = false;
 			}
 			else
 			{
@@ -742,7 +781,7 @@ bool PicoSCPIServer::OnCommand(
 						/* DutyCycle of square wave can not be controlled in ps3000a built in generator,
 						Must be implemented via Arbitrary*/
 						if( g_awgPS3000AWaveType == PS3000A_SQUARE )
-							GenerateSquareWave(g_arbitraryWaveform, SIG_GEN_BUFFER_SIZE, (double) duty);
+							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, (double) duty);
 						else
 							LogError("PICO3000A DUTY TODO code\n");
 					}
@@ -753,7 +792,7 @@ bool PicoSCPIServer::OnCommand(
 						/* DutyCycle of square wave can not be controlled in ps4000a built in generator,
 						Must be implemented via Arbitrary*/
 						if( g_awgPS4000AWaveType == PS4000A_SQUARE )
-							GenerateSquareWave(g_arbitraryWaveform, SIG_GEN_BUFFER_SIZE, (double) duty);
+							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, (double) duty);
 						else
 							LogError("PICO4000A DUTY TODO code\n");
 					}
@@ -764,7 +803,7 @@ bool PicoSCPIServer::OnCommand(
 						/* DutyCycle of square wave can not be controlled in ps3000a built in generator,
 						Must be implemented via Arbitrary*/
 						if( g_awgPS5000AWaveType == PS5000A_SQUARE )
-							GenerateSquareWave(g_arbitraryWaveform, SIG_GEN_BUFFER_SIZE, (double) duty);
+							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, (double) duty);
 						else
 							LogError("PICO5000A DUTY TODO code\n");
 					}
@@ -822,7 +861,7 @@ bool PicoSCPIServer::OnCommand(
 						}
 						if( (g_awgPS3000AWaveType == PS3000A_SQUARE) )
 						{
-							GenerateSquareWave(g_arbitraryWaveform, SIG_GEN_BUFFER_SIZE, 50);
+							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, 50);
 						}
 						g_awgPS3000AWaveType = waveform->second.type3000;
 						g_awgPS3000AOperation = waveform->second.op3000;
@@ -845,7 +884,7 @@ bool PicoSCPIServer::OnCommand(
 						}
 						if( (g_awgPS4000AWaveType == PS4000A_SQUARE) )
 						{
-							GenerateSquareWave(g_arbitraryWaveform, SIG_GEN_BUFFER_SIZE, 50);
+							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, 50);
 						}
 						g_awgPS4000AWaveType = waveform->second.type4000;
 						g_awgPS4000AOperation = waveform->second.op4000;
@@ -868,7 +907,7 @@ bool PicoSCPIServer::OnCommand(
 						}
 						if( (g_awgPS5000AWaveType == PS5000A_SQUARE) )
 						{
-							GenerateSquareWave(g_arbitraryWaveform, SIG_GEN_BUFFER_SIZE, 50);
+							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, 50);
 						}
 						g_awgPS5000AWaveType = waveform->second.type5000;
 						g_awgPS5000AOperation = waveform->second.op5000;
@@ -1145,6 +1184,13 @@ void PicoSCPIServer::ReconfigAWG()
 	double freq = g_awgFreq;
 	double inc = 0;
 	double dwell = 0;
+	float tempRange = g_awgRange;
+	float tempOffset = g_awgOffset;
+	if(!g_awgOn)
+	{
+		tempRange = 0;
+		tempOffset = 0;
+	}
 
 	switch(g_series)
 	{
@@ -1154,19 +1200,19 @@ void PicoSCPIServer::ReconfigAWG()
 			if(g_awgPS3000AWaveType == PS3000A_SQUARE || g_awgPS3000AWaveType == PS3000A_MAX_WAVE_TYPES)
 			{
 				uint32_t delta= 0;
-				auto status = ps3000aSigGenFrequencyToPhase(g_hScope, g_awgFreq, PS3000A_SINGLE, SIG_GEN_BUFFER_SIZE, &delta);
+				auto status = ps3000aSigGenFrequencyToPhase(g_hScope, g_awgFreq, PS3000A_SINGLE, g_awgBufferSize, &delta);
 				if(status != PICO_OK)
 					LogError("ps3000aSigGenFrequencyToPhase failed, code 0x%x\n", status);
 				status =  ps3000aSetSigGenArbitrary(
 							  g_hScope,
-							  g_awgOffset*1e6,
-							  g_awgRange*1e6*2,
+							  tempOffset*1e6,
+							  tempRange*1e6*2,
 							  delta,
 							  delta,
 							  0,
 							  0,
 							  g_arbitraryWaveform,
-							  SIG_GEN_BUFFER_SIZE,
+							  g_awgBufferSize,
 							  PS3000A_UP,          // sweepType
 							  PS3000A_ES_OFF,      // operation
 							  PS3000A_SINGLE,      // indexMode
@@ -1182,8 +1228,8 @@ void PicoSCPIServer::ReconfigAWG()
 			{
 				auto status = ps3000aSetSigGenBuiltInV2(
 								  g_hScope,
-								  g_awgOffset*1e6,        //Offset Voltage in µV
-								  g_awgRange *1e6*2,      // Peak to Peak Range in µV
+								  tempOffset*1e6,        //Offset Voltage in µV
+								  tempRange *1e6*2,      // Peak to Peak Range in µV
 								  g_awgPS3000AWaveType,
 								  freq,
 								  freq,
@@ -1210,19 +1256,19 @@ void PicoSCPIServer::ReconfigAWG()
 			if(g_awgPS4000AWaveType == PS4000A_SQUARE || g_awgPS4000AWaveType == PS4000A_MAX_WAVE_TYPES)
 			{
 				uint32_t delta= 0;
-				auto status = ps4000aSigGenFrequencyToPhase(g_hScope, g_awgFreq, PS4000A_SINGLE, SIG_GEN_BUFFER_SIZE, &delta);
+				auto status = ps4000aSigGenFrequencyToPhase(g_hScope, g_awgFreq, PS4000A_SINGLE, g_awgBufferSize, &delta);
 				if(status != PICO_OK)
 					LogError("ps3000aSigGenFrequencyToPhase failed, code 0x%x\n", status);
 				status =  ps4000aSetSigGenArbitrary(
 							  g_hScope,
-							  g_awgOffset*1e6,
-							  g_awgRange*1e6*2,
+							  tempOffset*1e6,
+							  tempRange*1e6*2,
 							  delta,
 							  delta,
 							  0,
 							  0,
 							  g_arbitraryWaveform,
-							  SIG_GEN_BUFFER_SIZE,
+							  g_awgBufferSize,
 							  PS4000A_UP,          // sweepType
 							  PS4000A_ES_OFF,      // operation
 							  PS4000A_SINGLE,      // indexMode
@@ -1238,8 +1284,8 @@ void PicoSCPIServer::ReconfigAWG()
 			{
 				auto status = ps4000aSetSigGenBuiltInV2(
 								  g_hScope,
-								  g_awgOffset*1e6,        //Offset Voltage in µV
-								  g_awgRange *1e6*2,      // Peak to Peak Range in µV
+								  tempOffset*1e6,        //Offset Voltage in µV
+								  tempRange *1e6*2,      // Peak to Peak Range in µV
 								  g_awgPS4000AWaveType,
 								  freq,
 								  freq,
@@ -1266,19 +1312,19 @@ void PicoSCPIServer::ReconfigAWG()
 			if(g_awgPS5000AWaveType == PS5000A_SQUARE || g_awgPS5000AWaveType == PS5000A_MAX_WAVE_TYPES)
 			{
 				uint32_t delta= 0;
-				auto status = ps5000aSigGenFrequencyToPhase(g_hScope, g_awgFreq, PS5000A_SINGLE, SIG_GEN_BUFFER_SIZE, &delta);
+				auto status = ps5000aSigGenFrequencyToPhase(g_hScope, g_awgFreq, PS5000A_SINGLE, g_awgBufferSize, &delta);
 				if(status != PICO_OK)
 					LogError("ps5000aSigGenFrequencyToPhase failed, code 0x%x\n", status);
 				status =  ps5000aSetSigGenArbitrary(
 							  g_hScope,
-							  g_awgOffset*1e6,
-							  g_awgRange*1e6*2,
+							  tempOffset*1e6,
+							  tempRange*1e6*2,
 							  delta,
 							  delta,
 							  0,
 							  0,
 							  g_arbitraryWaveform,
-							  SIG_GEN_BUFFER_SIZE,
+							  g_awgBufferSize,
 							  PS5000A_UP,          // sweepType
 							  PS5000A_ES_OFF,      // operation
 							  PS5000A_SINGLE,      // indexMode
@@ -1294,8 +1340,8 @@ void PicoSCPIServer::ReconfigAWG()
 			{
 				auto status = ps5000aSetSigGenBuiltInV2(
 								  g_hScope,
-								  g_awgOffset*1e6,        //Offset Voltage in µV
-								  g_awgRange *1e6*2,      // Peak to Peak Range in µV
+								  tempOffset*1e6,        //Offset Voltage in µV
+								  tempRange *1e6*2,      // Peak to Peak Range in µV
 								  g_awgPS5000AWaveType,
 								  freq,
 								  freq,
