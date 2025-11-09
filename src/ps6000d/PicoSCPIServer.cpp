@@ -2333,7 +2333,7 @@ void UpdateTrigger(bool force)
 	{
 		timeout = 1;
 		g_lastTriggerWasForced = true;
-		g_triggerOneShot = true; //TESTING lasse
+		g_triggerOneShot = true;
 	}
 	else
 		g_lastTriggerWasForced = false;
@@ -2769,7 +2769,7 @@ void StartCapture(bool stopFirst, bool force)
 	//If previous trigger was forced, we need to reconfigure the trigger to be not-forced now
 	if(g_lastTriggerWasForced && !force)
 	{
-		g_triggerOneShot = false; //TESTING lasse
+		g_triggerOneShot = false;
 		Stop();
 		UpdateTrigger();
 	}

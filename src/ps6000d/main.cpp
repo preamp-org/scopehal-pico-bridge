@@ -38,6 +38,10 @@
 #include <signal.h>
 
 PICO_STATUS (*picoGetUnitInfo) (int16_t, int8_t *, int16_t, int16_t *, PICO_INFO);
+PICO_INFO Open3000();
+PICO_INFO Open4000();
+PICO_INFO Open5000();
+PICO_INFO Open6000();
 
 using namespace std;
 
@@ -50,6 +54,7 @@ void help()
 			"\n"
 			"  [general options]:\n"
 			"    --help                        : this message...\n"
+			"    --series <number>             : specifies the model series to look for (3000, 4000, 5000, 6000)\n"
 			"    --scpi-port port              : specifies the SCPI control plane port (default 5025)\n"
 			"    --waveform-port port          : specifies the binary waveform data port (default 5026)\n"
 			"\n"
@@ -73,6 +78,7 @@ size_t g_series;
 
 int16_t g_hScope = 0;
 size_t g_numChannels = 0;
+bool limitChannels = false;
 
 Socket g_scpiSocket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
 Socket g_dataSocket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
@@ -87,7 +93,6 @@ int main(int argc, char* argv[])
 {
 	//Global settings
 	Severity console_verbosity = Severity::NOTICE;
-	bool limitChannels = false;
 	g_series = 0;
 
 	//Parse command-line arguments
@@ -105,6 +110,17 @@ int main(int argc, char* argv[])
 		{
 			help();
 			return 0;
+		}
+
+		else if(s == "--series")
+		{
+			if(i+1 < argc)
+			{
+				string tmp(argv[++i]);
+				g_series = tmp[0] - '0';
+				if( !( (g_series==3) || (g_series==4) || (g_series==5) || (g_series==6) ) )
+					g_series = 0;
+			}
 		}
 
 		else if(s == "--scpi-port")
@@ -127,80 +143,58 @@ int main(int argc, char* argv[])
 	}
 
 	//Set up logging
-	//g_log_sinks.emplace(g_log_sinks.begin(), new ColoredSTDLogSink(console_verbosity));
-	g_log_sinks.emplace(g_log_sinks.begin(), new STDLogSink(console_verbosity));
+	//TODO: fix color on Windows
+	g_log_sinks.emplace(g_log_sinks.begin(), new ColoredSTDLogSink(console_verbosity));
+	//g_log_sinks.emplace(g_log_sinks.begin(), new STDLogSink(console_verbosity));
 
 	//For now, open the first instrument we can find.
 	//TODO: implement device selection logic
-	LogNotice("Looking for a PicoScope 6000 series instrument to open...\n");
-	auto status = ps6000aOpenUnit(&g_hScope, NULL, PICO_DR_8BIT);
-	if(PICO_OK != status)
+	PICO_INFO status = PICO_NOT_FOUND;
+	switch(g_series)
 	{
-		LogNotice("Looking for a PicoScope 5000 series instrument to open...\n");
-		status = ps5000aOpenUnit(&g_hScope, NULL, PS5000A_DR_8BIT);
-		if( (status == PICO_POWER_SUPPLY_NOT_CONNECTED) or (status == PICO_USB3_0_DEVICE_NON_USB3_0_PORT) )
+		case 0:
 		{
-			// switch to USB power
-			// TODO: maybe require the user to specify this is ok
-			limitChannels = true;
-			LogNotice("Switching to USB power...\n");
-			status = ps5000aChangePowerSource(g_hScope, PICO_POWER_SUPPLY_NOT_CONNECTED);
+			status = Open3000();
+			if(status == 0)
+				break;
+			status = Open4000();
+			if(status == 0)
+				break;
+			status = Open5000();
+			if(status == 0)
+				break;
+			status = Open6000();
+			break;
 		}
-		if(PICO_OK != status)
+		case 3:
 		{
-			LogNotice("Looking for a PicoScope 4000 series instrument to open...\n");
-			status = ps4000aOpenUnit(&g_hScope, NULL);
-			if(status == PICO_POWER_SUPPLY_NOT_CONNECTED)
-			{
-				// switch to USB power
-				// only applies to model 4444
-				limitChannels = true;
-				LogNotice("Switching to USB power...\n");
-				status = ps4000aChangePowerSource(g_hScope, PICO_POWER_SUPPLY_NOT_CONNECTED);
-			}
-			if(PICO_OK != status)
-			{
-				LogNotice("Looking for a PicoScope 3000 series instrument to open...\n");
-				status = ps3000aOpenUnit(&g_hScope, NULL);
-				if(status == PICO_POWER_SUPPLY_NOT_CONNECTED)
-				{
-					// switch to USB power
-					// TODO: maybe require the user to specify this is ok
-					limitChannels = true;
-					LogNotice("Switching to USB power...\n");
-					status = ps3000aChangePowerSource(g_hScope, PICO_POWER_SUPPLY_NOT_CONNECTED);
-				}
-				if(PICO_OK != status)
-				{
-					LogError("Failed to open unit (code %d)\n", status);
-					return 1;
-				}
-				else
-				{
-					g_series = 3;
-					picoGetUnitInfo = ps3000aGetUnitInfo;
-				}
-			}
-			else
-			{
-				g_series = 4;
-				picoGetUnitInfo = ps4000aGetUnitInfo;
-			}
+			status = Open3000();
+			break;
 		}
-		else
+		case 4:
 		{
-			g_series = 5;
-			picoGetUnitInfo = ps5000aGetUnitInfo;
+			status = Open4000();
+			break;
+		}
+		case 5:
+		{
+			status = Open5000();
+			break;
+		}
+		case 6:
+		{
+			status = Open5000();
+			break;
 		}
 	}
-	else
+
+	if(PICO_OK != status)
 	{
-		g_series = 6;
-		picoGetUnitInfo = ps6000aGetUnitInfo;
+		LogError("Failed to open unit (code %d)\n", status);
+		return 1;
 	}
 
 	//See what we got
-	LogNotice("Successfully opened instrument\n");
 	{
 		LogIndenter li;
 
@@ -283,6 +277,7 @@ int main(int argc, char* argv[])
 		if(status == PICO_OK)
 			LogVerbose("IPP version:      %s\n", buf);
 	}
+	LogNotice("Successfully opened instrument %s (%s) on ports %i, %i\n", g_model.c_str(), g_serial.c_str(), scpi_port, waveform_port);
 
 	//Limit to two channels only while on USB power
 	if(limitChannels)
@@ -465,4 +460,75 @@ void OnQuit(int /*signal*/)
 			break;
 	}
 	exit(0);
+}
+
+PICO_INFO Open3000()
+{
+	LogNotice("Looking for a PicoScope 3000 series instrument to open...\n");
+	PICO_INFO status = ps3000aOpenUnit(&g_hScope, NULL);
+	if(status == PICO_POWER_SUPPLY_NOT_CONNECTED)
+	{
+		// switch to USB power
+		// TODO: maybe require the user to specify this is ok
+		limitChannels = true;
+		LogNotice("Switching to USB power...\n");
+		status = ps3000aChangePowerSource(g_hScope, PICO_POWER_SUPPLY_NOT_CONNECTED);
+	}
+	if(status == PICO_OK)
+	{
+		g_series = 3;
+		picoGetUnitInfo = ps3000aGetUnitInfo;
+	}
+	return status;
+}
+
+PICO_INFO Open4000()
+{
+	LogNotice("Looking for a PicoScope 4000 series instrument to open...\n");
+	PICO_INFO status = ps4000aOpenUnit(&g_hScope, NULL);
+	if(status == PICO_POWER_SUPPLY_NOT_CONNECTED)
+	{
+		// switch to USB power
+		// only applies to model 4444
+		limitChannels = true;
+		LogNotice("Switching to USB power...\n");
+		status = ps4000aChangePowerSource(g_hScope, PICO_POWER_SUPPLY_NOT_CONNECTED);
+	}
+	if(status == PICO_OK)
+	{
+		g_series = 4;
+		picoGetUnitInfo = ps4000aGetUnitInfo;
+	}
+	return status;
+}
+
+PICO_INFO Open5000()
+{
+	LogNotice("Looking for a PicoScope 5000 series instrument to open...\n");
+	PICO_INFO status = ps5000aOpenUnit(&g_hScope, NULL, PS5000A_DR_8BIT);
+	if( (status == PICO_POWER_SUPPLY_NOT_CONNECTED) or (status == PICO_USB3_0_DEVICE_NON_USB3_0_PORT) )
+	{
+		// switch to USB power
+		// TODO: maybe require the user to specify this is ok
+		limitChannels = true;
+		LogNotice("Switching to USB power...\n");
+		status = ps5000aChangePowerSource(g_hScope, PICO_POWER_SUPPLY_NOT_CONNECTED);
+	}
+	if(status == PICO_OK)
+	{
+		g_series = 5;
+		picoGetUnitInfo = ps5000aGetUnitInfo;
+	}
+	return status;
+}
+PICO_INFO Open6000()
+{
+	LogNotice("Looking for a PicoScope 6000 series instrument to open...\n");
+	PICO_INFO status = ps6000aOpenUnit(&g_hScope, NULL, PICO_DR_8BIT);
+	if(status == PICO_OK)
+	{
+		g_series = 6;
+		picoGetUnitInfo = ps6000aGetUnitInfo;
+	}
+	return status;
 }
