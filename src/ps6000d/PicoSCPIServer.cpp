@@ -1098,7 +1098,6 @@ bool PicoSCPIServer::OnCommand(
 		}
 	}
 
-	//TODO: bandwidth limiter
 	else if( (cmd == "BWLIM") && (args.size() == 1) )
 	{
 		//Extract channel ID from subject and clamp bounds
@@ -1112,6 +1111,13 @@ bool PicoSCPIServer::OnCommand(
 		
 		int freq_mhz = stoi(args[0]);
 		SetChannelBandwidthLimiter(channelId, freq_mhz);
+	}
+
+	else if( (cmd == "RANGE") )
+	{
+		//This will be called when digital channels are on the same View with analog channels and voltage range is changed.
+		//Just do nothing here to avoid spamming the debug log with Unrecognized command received.
+		return false;
 	}
 
 	else

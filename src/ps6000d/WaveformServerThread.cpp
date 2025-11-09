@@ -341,8 +341,17 @@ float InterpolateTriggerTime(int16_t* buf)
 	if(g_triggerSampleIndex <= 0)
 		return 0;
 	
-	//TODO trigger scale value depends on ADC setting and is different for EXT trig input
-	float trigscale = g_roundedRange[g_triggerChannel] / 32512;
+	//trigger scale value depends on ADC setting and is different for EXT trig input
+	size_t trigmaxcount = g_scaleValue;
+	if(g_triggerChannel == PICO_TRIGGER_AUX)
+	{
+		//set model dependent EXT trig scale value
+		trigmaxcount = 32767;
+		if(g_series == 6)
+			trigmaxcount = 32512;
+	}
+	
+	float trigscale = g_roundedRange[g_triggerChannel] / trigmaxcount;
 	float trigoff = g_offsetDuringArm[g_triggerChannel];
 
 	float fa = buf[g_triggerSampleIndex-1] * trigscale + trigoff;
