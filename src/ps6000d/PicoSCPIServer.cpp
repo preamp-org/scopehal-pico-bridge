@@ -491,21 +491,136 @@ size_t PicoSCPIServer::GetAnalogChannelCount()
 vector<size_t> PicoSCPIServer::GetSampleRates()
 {
 	vector<size_t> rates;
-
+	vector<size_t> vec;
 	lock_guard<mutex> lock(g_mutex);
-
 	//Enumerate timebases
-	//Don't report every single legal timebase as there's way too many, the list box would be huge!
-	//Report the first nine, then go to larger steps
-	//TODO: Use API-call to obtain some neat and evenly spaced values
-	size_t vec[] =
+	switch(g_series)
 	{
-		0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-		10, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131027, 262144, 524288, 1048576,
-		2097152, 4194304, 8388608, 16777216
-		//14, 29, 54, 104, 129, 254, 504, 629, 1254, 2504, 3129, 5004, 6254, 12504, 15629, 25004, 31254,
-		//62504, 125004, 156254, 250004, 312504, 500004, 625004, 1000004, 1562504
-	};
+		case 3:
+		{
+			if( (g_model[1]=='2') and (g_model[4]=='A' or g_model[4]=='B') )
+			{
+				//PicoScope 3000A and 3000B Series 2-Channel USB 2.0 Oscilloscopes
+				vec =
+				{
+					0,1,2,3,4,6,7,10,12,22,27,42,52,82,102,202,252,402,502,627,802,1002,2002,2502,4002,5002,6252,8002,10002,20002,25002,40002,50002,62502
+				};
+			}
+			if( (g_model.find("MSO") != string::npos) and (g_model[4]!='D') )
+			{
+				//PicoScope 3000 Series USB 2.0 MSOs
+				vec =
+				{
+					0,1,2,3,5,6,9,11,17,21,41,51,81,101,126,161,201,401,501,801,1001,1251,1601,2001,4001,5001,8001,10001,12501,16001,20001,40001,50001,80001,100001,125001
+				};
+			}
+			else
+			{
+				//PicoScope 3000A and 3000B Series 4-Channel USB 2.0 Oscilloscopes
+				//PicoScope 3207A and 3207B USB 3.0 Oscilloscopes
+				//PicoScope 3000D Series USB 3.0 Oscilloscopes and MSOs
+				vec =
+				{
+					0,1,2,3,4,6,7,10,12,18,22,42,52,82,102,127,162,202,402,502,802,1002,1252,1602,2002,4002,5002,8002,10002,12502,16002,20002,40002,50002,80002,100002,125002
+				};
+			}
+		}
+		break;
+
+		case 4:
+		{
+			if(g_model.find("4444") != string::npos)
+				{
+					//PicoScope 4444
+					vec =
+					{
+						0,1,2,3,4,6,7,12,22,27,42,52,102,127,202,252,402,502,627,1002,1252,2002,2502,4002,5002,6252,10002,12502,20002,25002,40002,50002
+					};
+				}
+			else
+				{
+					//PicoScope 4824 and 4000A Series
+					vec =
+					{
+						0,1,3,7,9,15,19,31,39,63,79,99,159,199,319,399,639,799,999,1599,1999,3199,3999,6399,7999,9999,15999,19999,31999,39999,63999,79999
+					};
+				}
+
+		}
+		break;
+
+		case 5:
+		{
+			switch(g_adcBits)
+			{
+				case 8:
+				{
+					vec =
+					{
+						0,1,2,3,4,6,7,10,12,18,22,42,52,82,102,127,162,202,402,502,802,1002,1252,1602,2002,4002,5002,8002,10002,12502,16002,20002,40002,50002,80002,100002,125002
+					};
+					break;
+				}
+
+				case 12:
+				{
+					vec =
+					{
+						1,2,3,4,5,7,8,11,13,23,28,43,53,83,103,203,253,403,503,628,803,1003,2003,2503,4003,5003,6253,8003,10003,20003,25003,40003,50003,62503
+					};
+					break;
+				}
+
+				case 14:
+				{
+					vec =
+					{
+						3,4,6,7,10,12,18,22,42,52,82,102,127,162,202,402,502,802,1002,1252,1602,2002,4002,5002,8002,10002,12502,16002,20002,40002,50002,80002,100002,125002
+					};
+					break;
+				}
+
+				case 15:
+				{
+					vec =
+					{
+						3,4,6,7,10,12,18,22,42,52,82,102,127,162,202,402,502,802,1002,1252,1602,2002,4002,5002,8002,10002,12502,16002,20002,40002,50002,80002,100002,125002
+					};
+					break;
+				}
+
+				case 16:
+				{
+					vec =
+					{
+						4,5,7,8,11,13,23,28,43,53,83,103,203,253,403,503,628,803,1003,2003,2503,4003,5003,6253,8003,10003,20003,25003,40003,50003,62503
+					};
+				}
+			}
+		}
+		break;
+
+		case 6:
+		{
+			//PicoScope 6428E-D
+			if(g_model[3] == '8')
+			{
+				vec =
+				{
+					0,1,2,3,4,5,6,7,10,15,25,30,55,105,130,205,255,505,630,1005,1255,2005,2505,5005,6255,10005,12505,15630,20005,25005,50005,62505,100005,125005,156255
+				};
+			}
+			//PicoScope 6000E Series except the PicoScope 6428E-D
+			else
+			{
+				vec =
+				{
+					0,1,2,3,4,5,6,9,14,24,29,54,66,5,104,129,204,254,504,629,1004,1254,2004,2504,5004,6254,10004,12504,15629,20004,25004,50004,62504,100004,125004,156254
+				};
+			}
+		}
+	}
+
 	for(auto i : vec)
 	{
 		double intervalNs;
@@ -541,7 +656,7 @@ vector<size_t> PicoSCPIServer::GetSampleRates()
 			size_t intervalFs = intervalNs * 1e6f;
 			rates.push_back(FS_PER_SECOND / intervalFs);
 		}
-		else if(PICO_INVALID_TIMEBASE == status)
+		else if( (PICO_INVALID_TIMEBASE == status) || (PICO_INVALID_CHANNEL == status) )
 		{
 			//Requested timebase not possible
 			//This is common and harmless if we ask for e.g. timebase 0 when too many channels are active.
@@ -550,7 +665,6 @@ vector<size_t> PicoSCPIServer::GetSampleRates()
 		else
 			LogWarning("GetTimebase failed, code %d / 0x%x\n", status, status);
 	}
-
 	return rates;
 }
 
