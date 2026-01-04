@@ -21,16 +21,20 @@ if(WIN32)
 	# Windows specific include path
 	include_directories(${PICO_SDK_PATH}/inc/)
 elseif(APPLE)
+	include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps2000a)
 	include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps3000a)
 	include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps4000a)
 	include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps5000a)
 	include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps6000a)
+	include_directories(${PICO_SDK_FRAMEWORK}/Headers/libpsospa)
 else()
 	# Linux specific include paths
+	include_directories(${PICO_SDK_PATH}/include/libps2000a)
 	include_directories(${PICO_SDK_PATH}/include/libps3000a)
 	include_directories(${PICO_SDK_PATH}/include/libps4000a)
 	include_directories(${PICO_SDK_PATH}/include/libps5000a)
 	include_directories(${PICO_SDK_PATH}/include/libps6000a)
+	include_directories(${PICO_SDK_PATH}/include/libpsospa)
 endif()
 
 ###############################################################################
@@ -49,20 +53,24 @@ if(WIN32)
 	xptools
 	log
 	scpi-server-tools
+	${PICO_SDK_PATH}/lib/ps2000a.lib
 	${PICO_SDK_PATH}/lib/ps3000a.lib
 	${PICO_SDK_PATH}/lib/ps4000a.lib
 	${PICO_SDK_PATH}/lib/ps5000a.lib
 	${PICO_SDK_PATH}/lib/ps6000a.lib
+	${PICO_SDK_PATH}/lib/psospa.lib
 	)
 elseif(APPLE)
 	target_link_libraries(ps6000d
 	xptools
 	log
 	scpi-server-tools
+	${PICO_SDK_FRAMEWORK}/Libraries/libps2000a/libps2000a.dylib
 	${PICO_SDK_FRAMEWORK}/Libraries/libps3000a/libps3000a.dylib
 	${PICO_SDK_FRAMEWORK}/Libraries/libps3000a/libps4000a.dylib
 	${PICO_SDK_FRAMEWORK}/Libraries/libps5000a/libps5000a.dylib
 	${PICO_SDK_FRAMEWORK}/Libraries/libps6000a/libps6000a.dylib
+	${PICO_SDK_FRAMEWORK}/Libraries/libpsospa/libpsospa.dylib
 	)
 else()
 	# Linux specific linker
@@ -70,10 +78,11 @@ else()
 	xptools
 	log
 	scpi-server-tools
+	${PICO_SDK_PATH}/lib/libps2000a.so
 	${PICO_SDK_PATH}/lib/libps3000a.so
 	${PICO_SDK_PATH}/lib/libps4000a.so
 	${PICO_SDK_PATH}/lib/libps5000a.so
 	${PICO_SDK_PATH}/lib/libps6000a.so
+	${PICO_SDK_PATH}/lib/libpsospa.so
 	)
 endif()
-

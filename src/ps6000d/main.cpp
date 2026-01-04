@@ -2,7 +2,7 @@
 *                                                                                                                      *
 * ps6000d                                                                                                              *
 *                                                                                                                      *
-* Copyright (c) 2012-2022 Andrew D. Zonenberg                                                                          *
+* Copyright (c) 2012-2026 Andrew D. Zonenberg                                                                          *
 * All rights reserved.                                                                                                 *
 *                                                                                                                      *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the     *
@@ -38,6 +38,7 @@
 #include <signal.h>
 
 PICO_STATUS (*picoGetUnitInfo) (int16_t, int8_t *, int16_t, int16_t *, PICO_INFO);
+PICO_INFO Open2000();
 PICO_INFO Open3000();
 PICO_INFO Open4000();
 PICO_INFO Open5000();
@@ -54,7 +55,7 @@ void help()
 			"\n"
 			"  [general options]:\n"
 			"    --help                        : this message...\n"
-			"    --series <number>             : specifies the model series to look for (3000, 4000, 5000, 6000)\n"
+			"    --series <number>             : specifies the model series to look for (2000, 3000, 4000, 5000, 6000)\n"
 			"    --scpi-port port              : specifies the SCPI control plane port (default 5025)\n"
 			"    --waveform-port port          : specifies the binary waveform data port (default 5026)\n"
 			"\n"
@@ -76,6 +77,7 @@ string g_serial;
 string g_fwver;
 size_t g_series;
 
+PicoScopeType g_pico_type;
 int16_t g_hScope = 0;
 size_t g_numChannels = 0;
 bool limitChannels = false;
@@ -118,7 +120,7 @@ int main(int argc, char* argv[])
 			{
 				string tmp(argv[++i]);
 				g_series = tmp[0] - '0';
-				if( !( (g_series==3) || (g_series==4) || (g_series==5) || (g_series==6) ) )
+				if( !( (g_series==2) || (g_series==3) || (g_series==4) || (g_series==5) || (g_series==6) ) )
 					g_series = 0;
 			}
 		}
@@ -154,6 +156,9 @@ int main(int argc, char* argv[])
 	{
 		case 0:
 		{
+			status = Open2000();
+			if(status == 0)
+				break;
 			status = Open3000();
 			if(status == 0)
 				break;
@@ -164,6 +169,11 @@ int main(int argc, char* argv[])
 			if(status == 0)
 				break;
 			status = Open6000();
+			break;
+		}
+		case 2:
+		{
+			status = Open2000();
 			break;
 		}
 		case 3:
@@ -183,7 +193,7 @@ int main(int argc, char* argv[])
 		}
 		case 6:
 		{
-			status = Open5000();
+			status = Open6000();
 			break;
 		}
 	}
@@ -288,19 +298,25 @@ int main(int argc, char* argv[])
 	//Initial channel state setup
 	for(size_t i=0; i<g_numChannels; i++)
 	{
-		switch(g_series)
+		switch(g_pico_type)
 		{
-			case 3:
+			case PICO2000A:
+				ps2000aSetChannel(g_hScope, (PS2000A_CHANNEL)i, 0, PS2000A_DC, PS2000A_1V, 0.0f);
+				break;
+			case PICO3000A:
 				ps3000aSetChannel(g_hScope, (PS3000A_CHANNEL)i, 0, PS3000A_DC, PS3000A_1V, 0.0f);
 				break;
-			case 4:
+			case PICO4000A:
 				ps4000aSetChannel(g_hScope, (PS4000A_CHANNEL)i, 0, PS4000A_DC, PICO_X1_PROBE_1V, 0.0f);
 				break;
-			case 5:
+			case PICO5000A:
 				ps5000aSetChannel(g_hScope, (PS5000A_CHANNEL)i, 0, PS5000A_DC, PS5000A_1V, 0.0f);
 				break;
-			case 6:
+			case PICO6000A:
 				ps6000aSetChannelOff(g_hScope, (PICO_CHANNEL)i);
+				break;
+			case PICOPSOSPA:
+				psospaSetChannelOff(g_hScope, (PICO_CHANNEL)i);
 				break;
 		}
 	}
@@ -311,6 +327,8 @@ int main(int argc, char* argv[])
 		g_channelOn[i] = false;
 		g_coupling[i] = PICO_DC;
 		g_range[i] = PICO_X1_PROBE_1V;
+		g_range_psospa[i] = PICO_X1_PROBE_NV;
+		g_range_3000e[i] = 1000000000;
 		g_range_3000a[i] = PS3000A_1V;
 		g_range_4000a[i] = PS4000A_1V;
 		g_range_5000a[i] = PS5000A_1V;
@@ -324,25 +342,16 @@ int main(int argc, char* argv[])
 	//Figure out digital channel configuration
 	switch(g_series)
 	{
+		//No digital options for 4000 series.
+		
+		case 2:
 		case 3:
+		case 5:
 			/* Model 3abcdMSO with
 				a=4 chan, b=0(unknown) c=6(bandwidth 6=200MHz) d=D(revision D)
 				MSO if MSO option is available
 				example 3406DMSO (full option)
 			*/
-			if(g_model.find("MSO") != string::npos)
-			{
-				g_numDigitalPods = 2;
-			}
-			else
-			{
-				g_numDigitalPods = 0;
-			}
-			break;
-
-		//No digital options for 4000 series.
-		
-		case 5:
 			/* Model 5abcdMSO with
 				a=4 chan, b=4(flexres up to 16bit) c=4(bandwidth 4=200MHz) d=D(revision D)
 				MSO if MSO option is available
@@ -414,19 +423,25 @@ int main(int argc, char* argv[])
 	}
 
 	//Done
-	switch(g_series)
+	switch(g_pico_type)
 	{
-		case 3:
+		case PICO2000A:
+			ps2000aCloseUnit(g_hScope);
+			break;
+		case PICO3000A:
 			ps3000aCloseUnit(g_hScope);
 			break;
-		case 4:
+		case PICO4000A:
 			ps4000aCloseUnit(g_hScope);
 			break;
-		case 5:
+		case PICO5000A:
 			ps5000aCloseUnit(g_hScope);
 			break;
-		case 6:
+		case PICO6000A:
 			ps6000aCloseUnit(g_hScope);
+			break;
+		case PICOPSOSPA:
+			psospaCloseUnit(g_hScope);
 			break;
 	}
 
@@ -444,24 +459,42 @@ void OnQuit(int /*signal*/)
 	LogNotice("Shutting down...\n");
 
 	lock_guard<mutex> lock(g_mutex);
-	switch (g_series)
+	switch(g_pico_type)
 	{
-		case 3:
+		case PICO2000A:
+			ps2000aCloseUnit(g_hScope);
+			break;
+		case PICO3000A:
 			ps3000aCloseUnit(g_hScope);
 			break;
-		case 4:
+		case PICO4000A:
 			ps4000aCloseUnit(g_hScope);
 			break;
-		case 5:
+		case PICO5000A:
 			ps5000aCloseUnit(g_hScope);
 			break;
-		case 6:
+		case PICO6000A:
 			ps6000aCloseUnit(g_hScope);
+			break;
+		case PICOPSOSPA:
+			psospaCloseUnit(g_hScope);
 			break;
 	}
 	exit(0);
 }
 
+PICO_INFO Open2000()
+{
+	LogNotice("Looking for a PicoScope 2000 series instrument to open...\n");
+	PICO_INFO status = ps2000aOpenUnit(&g_hScope, NULL);
+	if(status == PICO_OK)
+	{
+		g_series = 2;
+		g_pico_type = PICO2000A;
+		picoGetUnitInfo = ps2000aGetUnitInfo;
+	}
+	return status;
+}
 PICO_INFO Open3000()
 {
 	LogNotice("Looking for a PicoScope 3000 series instrument to open...\n");
@@ -477,7 +510,17 @@ PICO_INFO Open3000()
 	if(status == PICO_OK)
 	{
 		g_series = 3;
+		g_pico_type = PICO3000A;
 		picoGetUnitInfo = ps3000aGetUnitInfo;
+		return status;
+	}
+
+	status = psospaOpenUnit(&g_hScope, NULL, PICO_DR_8BIT, NULL);
+	if(status == PICO_OK)
+	{
+		g_series = 3;
+		g_pico_type = PICOPSOSPA;
+		picoGetUnitInfo = psospaGetUnitInfo;
 	}
 	return status;
 }
@@ -497,6 +540,7 @@ PICO_INFO Open4000()
 	if(status == PICO_OK)
 	{
 		g_series = 4;
+		g_pico_type = PICO4000A;
 		picoGetUnitInfo = ps4000aGetUnitInfo;
 	}
 	return status;
@@ -517,6 +561,7 @@ PICO_INFO Open5000()
 	if(status == PICO_OK)
 	{
 		g_series = 5;
+		g_pico_type = PICO5000A;
 		picoGetUnitInfo = ps5000aGetUnitInfo;
 	}
 	return status;
@@ -528,6 +573,7 @@ PICO_INFO Open6000()
 	if(status == PICO_OK)
 	{
 		g_series = 6;
+		g_pico_type = PICO6000A;
 		picoGetUnitInfo = ps6000aGetUnitInfo;
 	}
 	return status;
