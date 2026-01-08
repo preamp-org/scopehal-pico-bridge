@@ -667,7 +667,11 @@ vector<size_t> PicoSCPIServer::GetSampleRates()
 			}
 			break;
 		case PICOPSOSPA:
-			//TODO
+			//All desired sample rates in picoseconds
+			vec =
+			{
+				200,400,800,1600,3200,6400,12800,16000,20000,32000,40000,64000,80000,100000,128000,160000,200000,320000,400000,640000,800000,1000000,1280000,1600000,2000000,3200000,4000000,6400000,8000000,10000000,12800000,16000000,20000000,32000000,40000000,64000000,80000000,100000000,128000000,160000000,200000000,320000000,400000000,640000000,800000000,1000000000
+			};
 			break;
 	}
 
@@ -714,7 +718,7 @@ vector<size_t> PicoSCPIServer::GetSampleRates()
 			size_t intervalFs = intervalNs * 1e6f;
 			rates.push_back(FS_PER_SECOND / intervalFs);
 		}
-		else if( (PICO_INVALID_TIMEBASE == status) || (PICO_INVALID_CHANNEL == status) )
+		else if( (PICO_INVALID_TIMEBASE == status) || (PICO_INVALID_CHANNEL == status) || (PICO_NO_CHANNELS_OR_PORTS_ENABLED == status) )
 		{
 			//Requested timebase not possible
 			//This is common and harmless if we ask for e.g. timebase 0 when too many channels are active.
@@ -768,7 +772,7 @@ vector<size_t> PicoSCPIServer::GetSampleDepths()
 			status = ps6000aGetTimebase(g_hScope, ntimebase, 1, &intervalNs, &maxSamples, 0);
 			break;
 		case PICOPSOSPA:
-			status = psospaGetTimebase(g_hScope, ntimebase, 1, &intervalNs, &maxSamples, 0);
+			status = psospaGetTimebase(g_hScope, 40000, 1, &intervalNs, &maxSamples, 0);
 			break;
 	}
 
@@ -949,24 +953,34 @@ bool PicoSCPIServer::OnCommand(
 				if(g_awgFreq<1e-3)
 					g_awgFreq = 1;
 				
-				switch(g_series)
+				switch(g_pico_type)
 				{
-					case 2:
-					case 3:
-					case 4:
-					case 5:
-					{
+					case PICO2000A:
 						//handled by ReconfigAWG()
-					}
-					break;
-
-					case 6:
+						break;
+					case PICO3000A:
+						//handled by ReconfigAWG()
+						break;
+					case PICO4000A:
+						//handled by ReconfigAWG()
+						break;
+					case PICO5000A:
+						//handled by ReconfigAWG()
+						break;
+					case PICO6000A:
 					{
 						auto status = ps6000aSigGenFrequency(g_hScope, g_awgFreq);
 						if(status != PICO_OK)
 							LogError("ps6000aSigGenFrequency failed, code 0x%x (freq=%f)\n", status, g_awgFreq);
+						break;
 					}
-					break;
+					case PICOPSOSPA:
+					{
+						auto status = psospaSigGenFrequency(g_hScope, g_awgFreq);
+						if(status != PICO_OK)
+							LogError("psospaSigGenFrequency failed, code 0x%x (freq=%f)\n", status, g_awgFreq);
+						break;
+					}
 				}
 				ReconfigAWG();
 			}
@@ -1378,12 +1392,10 @@ void PicoSCPIServer::SetChannelBandwidthLimiter(size_t chan, unsigned int limit_
 				g_bandwidth_3000a[chan] = PS3000A_BW_FULL;
 			break;
 		case PICO4000A:
-			//if(limit_mhz == 20000)
-			//	g_bandwidth_4000a[chan] = PS4000A_BW_20KHZ;
-			//else if(limit_mhz == 100000)
-			//	g_bandwidth_4000a[chan] = PS4000A_BW_100KHZ;
 			if(limit_mhz == 1)
 				g_bandwidth_4000a[chan] = PS4000A_BW_1MHZ;
+			else if(limit_mhz == 100)	//workaround: use 100MHz for 100kHz filter (applicable to 4444 (20MHz bandwidth))
+				g_bandwidth_4000a[chan] = PS4000A_BW_100KHZ;
 			else
 				g_bandwidth_4000a[chan] = PS4000A_BW_FULL;
 			break;
@@ -1680,14 +1692,17 @@ void PicoSCPIServer::ReconfigAWG()
 			status = psospaSigGenApply(
 						 g_hScope,
 						 g_awgOn,
-						 false,		//sweep enable
-						 false,		//trigger enable
+						 0,		//sweep enable
+						 0,		//trigger enable
 						 &freq,
 						 &freq,
 						 &inc,
 						 &dwell);
 			if(PICO_OK != status)
+			{
 				LogError("psospaSigGenApply failed, code 0x%x\n", status);
+				LogError("psospaSigGenApply failed, freq %f\n", freq);
+			}
 			break;
 	}
 }
@@ -2618,8 +2633,8 @@ void PicoSCPIServer::SetSampleRate(uint64_t rate_hz)
 		case PICOPSOSPA:
 			//TODO
 			g_sampleInterval = 1e15 / rate_hz;
-			timebase = 0;
-			LogError("SetSampleRate Error unknown g_series\n");
+			timebase = period_ns;
+			//LogError("SetSampleRate Error unknown g_series\n");
 			break;
 	}
 

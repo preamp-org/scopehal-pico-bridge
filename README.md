@@ -30,12 +30,12 @@ As of January 2026 there should be a total of **98** individual devices supporte
 | ps2000aApi | ps3000aApi | psospaApi | ps4000aApi | ps5000aApi | ps6000aApi |
 | :---- | :---- | :---- | :---- | :---- | :---- |
 | 2205 MSO | 3203D | 3415E | 4224A | 5242A | 6403E |
-| 2205A MSO | 3203D MSO | 3415E MSO | 4424A | 5242B | 6404E |
+| **2205A MSO** | 3203D MSO | 3415E MSO | 4424A | 5242B | 6404E |
 | 2206 | 3204A | 3416E | 4444 | 5242D | 6405E |
 | 2206A | 3204B | 3416E MSO | **4824** | 5242D MSO | 6406E |
 | 2206B | 3204 MSO | 3417E | 4824A | 5243A | 6424E |
 | 2206B MSO | 3204D | 3417E MSO |  | 5243B | 6425E |
-| 2207 | 3204D MSO | 3418E |  | 5243D | 6426E |
+| 2207 | 3204D MSO | **3418E** |  | 5243D | 6426E |
 | 2207A | 3205A | 3418E MSO |  | 5243D MSO | 6428E-D |
 | 2207B | 3205B |  |  | 5244A | 6804E |
 | 2207B MSO | 3205 MSO |  |  | 5244B | **6824E** |
