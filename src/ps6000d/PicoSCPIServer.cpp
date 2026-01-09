@@ -525,6 +525,7 @@ vector<size_t> PicoSCPIServer::GetSampleRates()
 {
 	vector<size_t> rates;
 	vector<size_t> vec;
+	double previousIntervalNs = 0;
 	lock_guard<mutex> lock(g_mutex);
 	//Enumerate timebases
 	switch(g_pico_type)
@@ -710,6 +711,12 @@ vector<size_t> PicoSCPIServer::GetSampleRates()
 				break;
 			case PICOPSOSPA:
 				status = psospaGetTimebase(g_hScope, i, 1, &intervalNs, &maxSamples, 0);
+				if(std::abs((intervalNs * 1000) - i) > 1)
+					status = PICO_INVALID_TIMEBASE;		//Avoid irregular sample rates
+				if(intervalNs == previousIntervalNs)
+					status = PICO_INVALID_TIMEBASE;		//Avoid multiple entries of the same rate
+				if(PICO_OK == status)
+					previousIntervalNs = intervalNs;
 				break;
 		}
 
@@ -717,6 +724,7 @@ vector<size_t> PicoSCPIServer::GetSampleRates()
 		{
 			size_t intervalFs = intervalNs * 1e6f;
 			rates.push_back(FS_PER_SECOND / intervalFs);
+			//LogDebug("GetTimebase:\t%ld\t%f\t%f\n", i, (1e12f / i), (FS_PER_SECOND / intervalFs));
 		}
 		else if( (PICO_INVALID_TIMEBASE == status) || (PICO_INVALID_CHANNEL == status) || (PICO_NO_CHANNELS_OR_PORTS_ENABLED == status) )
 		{
