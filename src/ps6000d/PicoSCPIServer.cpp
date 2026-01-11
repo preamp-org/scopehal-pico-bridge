@@ -2,7 +2,7 @@
 *                                                                                                                      *
 * ps6000d                                                                                                              *
 *                                                                                                                      *
-* Copyright (c) 2012-2026 Andrew D. Zonenberg                                                                          *
+* Copyright (c) 2012-2026 Andrew D. Zonenberg and contributors                                                         *
 * All rights reserved.                                                                                                 *
 *                                                                                                                      *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the     *
@@ -2639,7 +2639,6 @@ void PicoSCPIServer::SetSampleRate(uint64_t rate_hz)
 			}
 			break;
 		case PICOPSOSPA:
-			//TODO
 			g_sampleInterval = 1e15 / rate_hz;
 			timebase = period_ns;
 			//LogError("SetSampleRate Error unknown g_series\n");

@@ -89,11 +89,6 @@ The process to build from source is basically [the same as for ngscopeclient](ht
     pacman -S mingw-w64-ucrt-x86_64-vulkan-headers mingw-w64-ucrt-x86_64-vulkan-loader mingw-w64-ucrt-x86_64-shaderc mingw-w64-ucrt-x86_64-glslang mingw-w64-ucrt-x86_64-spirv-tools
     ```
 5.
-    Install FFTS:
-    ```
-    pacman -S mingw-w64-ucrt-x86_64-ffts
-    ```
-6.
     Check out the code
     ```
     cd ~ 
@@ -102,7 +97,7 @@ The process to build from source is basically [the same as for ngscopeclient](ht
 
     **All following steps are to be done in a UCRT64 shell.**
 
-7.
+6.
     Build manually:
     ```
     cd scopehal-pico-bridge
@@ -112,6 +107,6 @@ The process to build from source is basically [the same as for ngscopeclient](ht
     ninja -j4
     ```
 	If the build fails with a lot of missing files, try adding your MSYS2 bin folder to your $PATH variable, i.e. "C:\msys64\ucrt64\bin" if you installed it to "C:\msys64".
-8.
+7.
     To run scopehal-pico-bridge:
     The binary can be found in the build directory, such as $HOME\scopehal-pico-bridge\build\src\ps6000d.
