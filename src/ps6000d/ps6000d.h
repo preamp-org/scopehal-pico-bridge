@@ -2,7 +2,7 @@
 *                                                                                                                      *
 * ps6000d                                                                                                              *
 *                                                                                                                      *
-* Copyright (c) 2012-2021 Andrew D. Zonenberg                                                                          *
+* Copyright (c) 2012-2026 Andrew D. Zonenberg and contributors                                                         *
 * All rights reserved.                                                                                                 *
 *                                                                                                                      *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the     *
@@ -42,15 +42,23 @@
 #include <map>
 #include <mutex>
 
+#include "ps6000aApi.h"	//always include this first! 01/26
+#include "ps5000aApi.h"
+#include "ps4000aApi.h"
 #include "ps3000aApi.h"
-#include "ps6000aApi.h"
+#include "ps2000aApi.h"
+#include "psospaApi.h"
 #include "PicoStatus.h"
 #include "PicoVersion.h"
 
 enum PicoScopeType
 {
+	PICO2000A,
 	PICO3000A,
-	PICO6000A
+	PICO4000A,
+	PICO5000A,
+	PICO6000A,
+	PICOPSOSPA
 };
 
 extern Socket g_scpiSocket;
@@ -60,25 +68,36 @@ extern int16_t g_hScope;
 void WaveformServerThread();
 
 extern PicoScopeType g_pico_type;
-extern std::string g_model;
+extern std::string g_model;		//model number, used to discern features
 extern std::string g_serial;
 extern std::string g_fwver;
+extern std::size_t g_series;	//single 1st digit: 2,3,4,5,6
 
+extern bool g_limitChannels;
 extern size_t g_numChannels;
 extern size_t g_numDigitalPods;
 
 extern volatile bool g_waveformThreadQuit;
 extern size_t g_captureMemDepth;
 extern size_t g_memDepth;
+extern size_t g_scaleValue;
 extern std::map<size_t, bool> g_channelOnDuringArm;
 extern std::map<size_t, bool> g_channelOn;
 extern std::map<size_t, double> g_roundedRange;
 extern std::map<size_t, PICO_COUPLING> g_coupling;
 extern std::map<size_t, PICO_CONNECT_PROBE_RANGE> g_range;
+extern std::map<size_t, enPS2000ARange> g_range_2000a;
 extern std::map<size_t, enPS3000ARange> g_range_3000a;
+extern std::map<size_t, enPS4000ARange> g_range_4000a;
+extern std::map<size_t, enPS5000ARange> g_range_5000a;
+extern std::map<size_t, PICO_PROBE_RANGE_INFO> g_range_psospa;
+extern std::map<size_t, double> g_range_3000e;
 extern std::map<size_t, double> g_offset;
-extern std::map<size_t, PICO_BANDWIDTH_LIMITER> g_bandwidth;
-extern std::map<size_t, size_t> g_bandwidth_legacy;
+extern std::map<size_t, double> g_msoPodThresholdVoltage;
+extern std::map<size_t, PICO_BANDWIDTH_LIMITER> g_bandwidth;	//6000A,PSOSPA
+extern std::map<size_t, enPS3000ABandwidthLimiter> g_bandwidth_3000a;
+extern std::map<size_t, enPS4000ABandwidthLimiter> g_bandwidth_4000a;
+extern std::map<size_t, enPS5000ABandwidthLimiter> g_bandwidth_5000a;
 
 extern bool g_msoPodEnabled[2];
 extern bool g_msoPodEnabledDuringArm[2];

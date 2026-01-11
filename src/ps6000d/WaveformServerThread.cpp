@@ -2,7 +2,7 @@
 *                                                                                                                      *
 * ps6000d                                                                                                              *
 *                                                                                                                      *
-* Copyright (c) 2012-2022 Andrew D. Zonenberg                                                                          *
+* Copyright (c) 2012-2026 Andrew D. Zonenberg  and contributors                                                        *
 * All rights reserved.                                                                                                 *
 *                                                                                                                      *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the     *
@@ -72,10 +72,27 @@ void WaveformServerThread()
 		int16_t ready;
 		{
 			lock_guard<mutex> lock(g_mutex);
-			if(g_pico_type == PICO6000A)
-				ps6000aIsReady(g_hScope, &ready);
-			else if(g_pico_type == PICO3000A)
-				ps3000aIsReady(g_hScope, &ready);
+			switch(g_pico_type)
+			{
+				case PICO2000A:
+					ps2000aIsReady(g_hScope, &ready);
+					break;
+				case PICO3000A:
+					ps3000aIsReady(g_hScope, &ready);
+					break;
+				case PICO4000A:
+					ps4000aIsReady(g_hScope, &ready);
+					break;
+				case PICO5000A:
+					ps5000aIsReady(g_hScope, &ready);
+					break;
+				case PICO6000A:
+					ps6000aIsReady(g_hScope, &ready);
+					break;
+				case PICOPSOSPA:
+					psospaIsReady(g_hScope, &ready);
+					break;
+			}
 		}
 
 		if( (ready == 0) || (!g_triggerArmed) )
@@ -97,29 +114,67 @@ void WaveformServerThread()
 
 			//Stop the trigger
 			PICO_STATUS status = PICO_OPERATION_FAILED;
-			if(g_pico_type == PICO6000A)
-				status = ps6000aStop(g_hScope);
-			else if(g_pico_type == PICO3000A)
-				status = ps3000aStop(g_hScope);
+			switch(g_pico_type)
+			{
+				case PICO2000A:
+					status = ps2000aStop(g_hScope);
+					break;
+				case PICO3000A:
+					status = ps3000aStop(g_hScope);
+					break;
+				case PICO4000A:
+					status = ps4000aStop(g_hScope);
+					break;
+				case PICO5000A:
+					status = ps5000aStop(g_hScope);
+					break;
+				case PICO6000A:
+					status = ps6000aStop(g_hScope);
+					break;
+				case PICOPSOSPA:
+					status = psospaStop(g_hScope);
+					break;
+			}
 			if(PICO_OK != status)
-				LogFatal("ps6000aStop failed (code 0x%x)\n", status);
+				LogFatal("psXXXXStop failed (code 0x%x)\n", status);
 
 			//Verify it's actually stopped
 
 			//Set up buffers if needed
 			if(g_memDepthChanged || waveformBuffers.empty())
 			{
-				LogTrace("Reallocating buffers\n");
+				//LogVerbose("Reallocating buffers\n");
 
 				//Clear out old buffers
 				for(auto ch : g_channelIDs)
 				{
-					if(g_pico_type == PICO6000A)
-						ps6000aSetDataBuffer(g_hScope, ch, NULL,
-											 0, PICO_INT16_T, 0, PICO_RATIO_MODE_RAW, PICO_CLEAR_ALL);
-					else if(g_pico_type == PICO3000A)
-						ps3000aSetDataBuffer(g_hScope, (PS3000A_CHANNEL)ch, NULL,
-											 0, 0, PS3000A_RATIO_MODE_NONE);
+					switch(g_pico_type)
+					{
+						case PICO2000A:
+							ps2000aSetDataBuffer(g_hScope, (PS2000A_CHANNEL)ch, NULL,
+												0, 0, PS2000A_RATIO_MODE_NONE);
+							break;
+						case PICO3000A:
+							ps3000aSetDataBuffer(g_hScope, (PS3000A_CHANNEL)ch, NULL,
+												0, 0, PS3000A_RATIO_MODE_NONE);
+							break;
+						case PICO4000A:
+							ps4000aSetDataBuffer(g_hScope, (PS4000A_CHANNEL)ch, NULL,
+												0, 0, PS4000A_RATIO_MODE_NONE);
+							break;
+						case PICO5000A:
+							ps5000aSetDataBuffer(g_hScope, (PS5000A_CHANNEL)ch, NULL,
+												0, 0, PS5000A_RATIO_MODE_NONE);
+							break;
+						case PICO6000A:
+							ps6000aSetDataBuffer(g_hScope, ch, NULL,
+												0, PICO_INT16_T, 0, PICO_RATIO_MODE_RAW, PICO_CLEAR_ALL);
+							break;
+						case PICOPSOSPA:
+							psospaSetDataBuffer(g_hScope, ch, NULL,
+												0, PICO_INT16_T, 0, PICO_RATIO_MODE_RAW, PICO_CLEAR_ALL);
+							break;
+					}
 				}
 
 				//Clear out old buffers
@@ -142,12 +197,33 @@ void WaveformServerThread()
 
 					//Give it to the scope, removing any other buffer we might have
 					auto ch = g_channelIDs[i];
-					if(g_pico_type == PICO6000A)
-						status = ps6000aSetDataBuffer(g_hScope, (PICO_CHANNEL)ch, waveformBuffers[i],
-													  g_captureMemDepth, PICO_INT16_T, 0, PICO_RATIO_MODE_RAW, PICO_ADD);
-					else if(g_pico_type == PICO3000A)
-						status = ps3000aSetDataBuffer(g_hScope, (PS3000A_CHANNEL)ch, waveformBuffers[i],
-													  g_captureMemDepth, 0, PS3000A_RATIO_MODE_NONE);
+					switch(g_pico_type)
+					{
+						case PICO2000A:
+							status = ps2000aSetDataBuffer(g_hScope, (PS2000A_CHANNEL)ch, waveformBuffers[i],
+														g_captureMemDepth, 0, PS2000A_RATIO_MODE_NONE);
+							break;
+						case PICO3000A:
+							status = ps3000aSetDataBuffer(g_hScope, (PS3000A_CHANNEL)ch, waveformBuffers[i],
+														g_captureMemDepth, 0, PS3000A_RATIO_MODE_NONE);
+							break;
+						case PICO4000A:
+							status = ps4000aSetDataBuffer(g_hScope, (PS4000A_CHANNEL)ch, waveformBuffers[i],
+														g_captureMemDepth, 0, PS4000A_RATIO_MODE_NONE);
+							break;
+						case PICO5000A:
+							status = ps5000aSetDataBuffer(g_hScope, (PS5000A_CHANNEL)ch, waveformBuffers[i],
+														g_captureMemDepth, 0, PS5000A_RATIO_MODE_NONE);
+							break;
+						case PICO6000A:
+							status = ps6000aSetDataBuffer(g_hScope, (PICO_CHANNEL)ch, waveformBuffers[i],
+														g_captureMemDepth, PICO_INT16_T, 0, PICO_RATIO_MODE_RAW, PICO_ADD);
+							break;
+						case PICOPSOSPA:
+							status = psospaSetDataBuffer(g_hScope, (PICO_CHANNEL)ch, waveformBuffers[i],
+														g_captureMemDepth, PICO_INT16_T, 0, PICO_RATIO_MODE_RAW, PICO_ADD);
+							break;
+					}
 					if(status != PICO_OK)
 						LogFatal("psXXXXSetDataBuffer for channel %d failed (code 0x%x)\n", ch, status);
 				}
@@ -159,12 +235,40 @@ void WaveformServerThread()
 			numSamples = g_captureMemDepth;
 			numSamples_int = g_captureMemDepth;
 			int16_t overflow = 0;
-			if(g_pico_type == PICO6000A)
-				status = ps6000aGetValues(g_hScope, 0, &numSamples, 1, PICO_RATIO_MODE_RAW, 0, &overflow);
-			else if(g_pico_type == PICO3000A)
-				status = ps3000aGetValues(g_hScope, 0, &numSamples_int, 1, PS3000A_RATIO_MODE_NONE, 0, &overflow);
+			switch(g_pico_type)
+			{
+				case PICO2000A:
+					status = ps2000aGetValues(g_hScope, 0, &numSamples_int, 1, PS2000A_RATIO_MODE_NONE, 0, &overflow);
+					numSamples = numSamples_int;
+					break;
+				case PICO3000A:
+					status = ps3000aGetValues(g_hScope, 0, &numSamples_int, 1, PS3000A_RATIO_MODE_NONE, 0, &overflow);
+					numSamples = numSamples_int;
+					break;
+				case PICO4000A:
+					status = ps4000aGetValues(g_hScope, 0, &numSamples_int, 1, PS4000A_RATIO_MODE_NONE, 0, &overflow);
+					numSamples = numSamples_int;
+					break;
+				case PICO5000A:
+					status = ps5000aGetValues(g_hScope, 0, &numSamples_int, 1, PS5000A_RATIO_MODE_NONE, 0, &overflow);
+					numSamples = numSamples_int;
+					break;
+				case PICO6000A:
+					status = ps6000aGetValues(g_hScope, 0, &numSamples, 1, PICO_RATIO_MODE_RAW, 0, &overflow);
+					break;
+				case PICOPSOSPA:
+					status = psospaGetValues(g_hScope, 0, &numSamples, 1, PICO_RATIO_MODE_RAW, 0, &overflow);
+					break;
+			}
 			if(status == PICO_NO_SAMPLES_AVAILABLE)
-				continue; // state changed while mutex was unlocked?
+			{
+				LogVerbose("PICO_NO_SAMPLES_AVAILABLE\n");
+				//This response will occur if some setting like vertical scale changed just before aGetValues.
+				//flush buffers and update channel
+				g_memDepthChanged = true;
+				UpdateTrigger(true);
+				continue;
+			}
 			if(PICO_OK != status)
 				LogFatal("psXXXXGetValues (code 0x%x)\n", status);
 
@@ -180,8 +284,6 @@ void WaveformServerThread()
 				if(g_msoPodEnabledDuringArm[i])
 					numchans ++;
 			}
-
-
 		}
 
 		//Do *not* hold mutex while sending data to the client
@@ -231,10 +333,10 @@ void WaveformServerThread()
 
 					chdrs.nchan = i;
 					chdrs.numSamples = numSamples;
-					chdrs.scale = g_roundedRange[i] / 32512;
+					chdrs.scale = g_roundedRange[i] / g_scaleValue;
 					chdrs.offset = g_offsetDuringArm[i];
 					chdrs.trigphase = trigphase;
-
+					
 					//Send channel headers
 					if(!client.SendLooped((uint8_t*)&chdrs, sizeof(chdrs)))
 						break;
@@ -273,7 +375,9 @@ void WaveformServerThread()
 
 			//Re-arm the trigger if doing repeating triggers
 			if(g_triggerOneShot)
+			{
 				g_triggerArmed = false;
+			}
 			else
 			{
 				if(g_captureMemDepth != g_memDepth)
@@ -300,8 +404,18 @@ float InterpolateTriggerTime(int16_t* buf)
 {
 	if(g_triggerSampleIndex <= 0)
 		return 0;
-
-	float trigscale = g_roundedRange[g_triggerChannel] / 32512;
+	
+	//trigger scale value depends on ADC setting and is different for EXT trig input
+	size_t trigmaxcount = g_scaleValue;
+	if(g_triggerChannel == PICO_TRIGGER_AUX)
+	{
+		//set model dependent EXT trig scale value
+		trigmaxcount = 32767;
+		if(g_series == 6)
+			trigmaxcount = 32512;
+	}
+	
+	float trigscale = g_roundedRange[g_triggerChannel] / trigmaxcount;
 	float trigoff = g_offsetDuringArm[g_triggerChannel];
 
 	float fa = buf[g_triggerSampleIndex-1] * trigscale + trigoff;
