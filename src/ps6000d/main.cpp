@@ -328,6 +328,7 @@ int main(int argc, char* argv[])
 		g_coupling[i] = PICO_DC;
 		g_range[i] = PICO_X1_PROBE_1V;
 		g_range_psospa[i] = PICO_X1_PROBE_NV;
+		g_range_2000a[i] = PS2000A_1V;
 		g_range_3000e[i] = 1000000000;
 		g_range_3000a[i] = PS3000A_1V;
 		g_range_4000a[i] = PS4000A_1V;
