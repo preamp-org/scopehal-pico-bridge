@@ -40,6 +40,9 @@
 		CHANS?
 			Returns the number of channels on the instrument.
 
+		SEQNUM?
+			Returns the most recently sent sequence number
+
 		[1|2]D:PRESENT?
 			Returns 1 = MSO pod present, 0 = MSO pod not present
 
@@ -250,6 +253,8 @@ int16_t* g_arbitraryWaveform;
 void GenerateSquareWave(int16_t* &waveform, size_t bufferSize, double dutyCycle, int16_t amplitude = 32767);
 void ReconfigAWG();
 
+extern uint32_t g_lastTxSeq;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Construction / destruction
 
@@ -365,6 +370,13 @@ bool PicoSCPIServer::OnQuery(
 	const string& subject,
 	const string& cmd)
 {
+	//SEQNUM?
+	if(cmd == "SEQNUM")
+	{
+		SendReply(to_string(g_lastTxSeq));
+		return true;
+	}
+
 	//Extract channel ID from subject and clamp bounds
 	size_t channelId = 0;
 	//size_t laneId = 0;
@@ -435,7 +447,7 @@ bool PicoSCPIServer::OnQuery(
 				}
 			}
 			break;
-			
+
 			default:
 			{
 				SendReply("0");
@@ -447,7 +459,7 @@ bool PicoSCPIServer::OnQuery(
 	{
 		lock_guard<mutex> lock(g_mutex);
 		string ret = "0";
-		
+
 		switch(g_pico_type)
 		{
 			case PICO2000A:
@@ -540,7 +552,7 @@ vector<size_t> PicoSCPIServer::GetSampleRates()
 			}
 			else if( g_model=="2206" || g_model=="2206A" || g_model=="2206B" || g_model=="2205AMSO" || g_model=="2405A" )
 			{
-				//!! 500 MS/s maximum sampling rate models 
+				//!! 500 MS/s maximum sampling rate models
 				vec =
 				{
 					0,1,2,3,4,6,7,10,12,22,27,42,52,82,102,127,202,252,402,502,627,802,1002,1252,2002,2502,4002,5002,6252,8002,10002,12502,20002,25002,40002,50002,62502
@@ -548,7 +560,7 @@ vector<size_t> PicoSCPIServer::GetSampleRates()
 			}
 			else
 			{
-				//!! 1 GS/s maximum sampling rate models 
+				//!! 1 GS/s maximum sampling rate models
 				vec =
 				{
 					0,1,2,3,4,6,7,10,12,18,22,27,42,52,82,102,127,162,202,252,402,502,802,1002,1252,1602,2002,2502,4002,5002,8002,10002,12502,16002,20002,25002,40002,50002,80002,100002,125002
@@ -960,7 +972,7 @@ bool PicoSCPIServer::OnCommand(
 				//Frequency must not be zero
 				if(g_awgFreq<1e-3)
 					g_awgFreq = 1;
-				
+
 				switch(g_pico_type)
 				{
 					case PICO2000A:
@@ -1148,7 +1160,7 @@ bool PicoSCPIServer::OnCommand(
 						status = ps6000aSigGenWaveform(g_hScope, waveform->second.type6000, NULL, 0);
 						if(PICO_OK != status)
 							LogError("ps6000aSigGenWaveform failed, code 0x%x\n", status);
-						ReconfigAWG();						
+						ReconfigAWG();
 						if(args[0] == "ARBITRARY")
 						{
 							//TODO: ReconfigAWG() can handle this already, must only fill the buffer
@@ -1159,7 +1171,7 @@ bool PicoSCPIServer::OnCommand(
 						status = psospaSigGenWaveform(g_hScope, waveform->second.type6000, NULL, 0);
 						if(PICO_OK != status)
 							LogError("psospaSigGenWaveform failed, code 0x%x\n", status);
-						ReconfigAWG();						
+						ReconfigAWG();
 						if(args[0] == "ARBITRARY")
 						{
 							//TODO: ReconfigAWG() can handle this already, must only fill the buffer
@@ -1167,7 +1179,7 @@ bool PicoSCPIServer::OnCommand(
 						}
 						break;
 				}
-				
+
 				ReconfigAWG();
 			}
 			else
@@ -1359,7 +1371,7 @@ bool PicoSCPIServer::OnCommand(
 			//channelIsDigital = false;
 		}
 		lock_guard<mutex> lock(g_mutex);
-		
+
 		int freq_mhz = stoi(args[0]);
 		SetChannelBandwidthLimiter(channelId, freq_mhz);
 	}
@@ -1387,7 +1399,7 @@ bool PicoSCPIServer::OnCommand(
 
 void PicoSCPIServer::SetChannelBandwidthLimiter(size_t chan, unsigned int limit_mhz)
 {
-	
+
 	switch(g_pico_type)
 	{
 		case PICO2000A:
@@ -1967,7 +1979,7 @@ void PicoSCPIServer::SetAnalogCoupling(size_t chIndex, const std::string& coupli
 void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 {
 	lock_guard<mutex> lock(g_mutex);
-	
+
 	size_t channelId = chIndex & 0xff;
 	//range_V is peak-to-peak whereas the Pico modes are V-peak,
 	//i.e. PS5000_20V = +-20V = 40Vpp = 'range_V = 40'
@@ -2440,7 +2452,7 @@ void PicoSCPIServer::SetDigitalThreshold(size_t chIndex, double threshold_V)
 			for(int i=0; i<7; i++)
 				g_msoPodThreshold[channelId][i] = code;
 			g_msoPodThresholdVoltage[channelId] = threshold_V;
-			
+
 			break;
 		case 6:
 			//Threshold voltage range is 8V for TA369 pods
@@ -2464,7 +2476,7 @@ void PicoSCPIServer::SetDigitalHysteresis(size_t chIndex, double hysteresis)
 	//Hysteresis is fixed on all devices with MSO option
 	if( (g_series != 6) )
 		return;
-	
+
 	lock_guard<mutex> lock(g_mutex);
 
 	int channelId = chIndex & 0xff;
@@ -2509,7 +2521,7 @@ void PicoSCPIServer::SetSampleRate(uint64_t rate_hz)
 			}
 			else if( g_model=="2206" || g_model=="2206A" || g_model=="2206B" || g_model=="2205AMSO" || g_model=="2405A" )
 			{
-				//!! 500 MS/s maximum sampling rate models 
+				//!! 500 MS/s maximum sampling rate models
 				if(period_ns < 4)
 					timebase = 0;
 				else if(period_ns < 16)
@@ -2519,7 +2531,7 @@ void PicoSCPIServer::SetSampleRate(uint64_t rate_hz)
 			}
 			else
 			{
-				//!! 1 GS/s maximum sampling rate models 
+				//!! 1 GS/s maximum sampling rate models
 				if(period_ns < 2)
 					timebase = 0;
 				else if(period_ns < 8)
@@ -2755,7 +2767,7 @@ void PicoSCPIServer::SetEdgeTriggerEdge(const string& edge)
 void UpdateChannel(size_t chan)
 {
 	int16_t scaleVal;
-	
+
 	switch(g_pico_type)
 	{
 		case PICO2000A:
@@ -3399,7 +3411,7 @@ PICO_STATUS StartInternal()
 	int32_t nPreTrigger_int = nPreTrigger;
 	int32_t nPostTrigger_int = nPostTrigger;
 	g_triggerSampleIndex = nPreTrigger;
-	
+
 	switch(g_pico_type)
 	{
 		case PICO2000A:

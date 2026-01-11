@@ -42,11 +42,29 @@ float InterpolateTriggerTime(int16_t* buf);
 
 vector<PICO_CHANNEL> g_channelIDs;
 
+uint32_t g_lastTxSeq = 0;
+uint32_t g_lastRxAck = 0;
+
+void CheckForACKs(Socket& client);
+
+void CheckForACKs(Socket& client)
+{
+	while(client.GetRxBytesAvailable() >= 4)
+	{
+		if(!client.RecvLooped((uint8_t*)&g_lastRxAck, sizeof(g_lastRxAck)))
+			break;
+		LogTrace("Got ACK %u\n", g_lastRxAck);
+	}
+}
+
 void WaveformServerThread()
 {
 #ifdef __linux__
 	pthread_setname_np(pthread_self(), "WaveformThread");
 #endif
+
+	g_lastTxSeq = 0;
+	g_lastRxAck = 0;
 
 	Socket client = g_dataSocket.Accept();
 	LogVerbose("Client connected to data plane socket\n");
@@ -289,9 +307,15 @@ void WaveformServerThread()
 		//Do *not* hold mutex while sending data to the client
 		//This can take a long time and we don't want to block the control channel
 		{
+			//Bump sequence number
+			g_lastTxSeq ++;
+
 			#pragma pack(push, 1)
 			struct
 			{
+				//Sequence number
+				uint32_t sequence;
+
 				//Number of channels in the current waveform
 				uint16_t numChannels;
 
@@ -300,6 +324,7 @@ void WaveformServerThread()
 				int64_t fs_per_sample;
 			} wfmhdrs;
 			#pragma pack(pop)
+			wfmhdrs.sequence = g_lastTxSeq;
 			wfmhdrs.numChannels = numchans;
 			wfmhdrs.fs_per_sample = interval;
 
@@ -307,6 +332,14 @@ void WaveformServerThread()
 			//TODO: send overflow flags to client
 			if(!client.SendLooped((uint8_t*)&wfmhdrs, sizeof(wfmhdrs)))
 				break;
+
+			//Process incoming ACKs
+			CheckForACKs(client);
+
+			//Backpressure if we have too many waveforms in flight
+			const int maxWaveformsInFlight = 5;
+			while( (g_lastTxSeq - g_lastRxAck) >= maxWaveformsInFlight)
+				CheckForACKs(client);
 
 			//Interpolate trigger position if we're using an analog level trigger
 			bool triggerIsAnalog = (g_triggerChannel < g_numChannels);
@@ -336,7 +369,7 @@ void WaveformServerThread()
 					chdrs.scale = g_roundedRange[i] / g_scaleValue;
 					chdrs.offset = g_offsetDuringArm[i];
 					chdrs.trigphase = trigphase;
-					
+
 					//Send channel headers
 					if(!client.SendLooped((uint8_t*)&chdrs, sizeof(chdrs)))
 						break;
@@ -404,7 +437,7 @@ float InterpolateTriggerTime(int16_t* buf)
 {
 	if(g_triggerSampleIndex <= 0)
 		return 0;
-	
+
 	//trigger scale value depends on ADC setting and is different for EXT trig input
 	size_t trigmaxcount = g_scaleValue;
 	if(g_triggerChannel == PICO_TRIGGER_AUX)
@@ -414,7 +447,7 @@ float InterpolateTriggerTime(int16_t* buf)
 		if(g_series == 6)
 			trigmaxcount = 32512;
 	}
-	
+
 	float trigscale = g_roundedRange[g_triggerChannel] / trigmaxcount;
 	float trigoff = g_offsetDuringArm[g_triggerChannel];
 
