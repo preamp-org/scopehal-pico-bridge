@@ -300,17 +300,32 @@ int main(int argc, char* argv[])
 	{
 		switch(g_pico_type)
 		{
+			case PICO2000:
+				//ps2000_set_channel(g_hScope, (PS2000_CHANNEL)i, 0, 1, PS2000_1V);
+				break;
 			case PICO2000A:
 				ps2000aSetChannel(g_hScope, (PS2000A_CHANNEL)i, 0, PS2000A_DC, PS2000A_1V, 0.0f);
+				break;
+			case PICO3000:
+				//ps3000_set_channel(g_hScope, (PS3000_CHANNEL)i, 0, 1, PS3000_1V);
 				break;
 			case PICO3000A:
 				ps3000aSetChannel(g_hScope, (PS3000A_CHANNEL)i, 0, PS3000A_DC, PS3000A_1V, 0.0f);
 				break;
+			case PICO4000:
+				//ps4000SetChannel(g_hScope, (PS4000_CHANNEL)i, 0, 1, PS4000_1V);
+				break;
 			case PICO4000A:
 				ps4000aSetChannel(g_hScope, (PS4000A_CHANNEL)i, 0, PS4000A_DC, PICO_X1_PROBE_1V, 0.0f);
 				break;
+			case PICO5000:
+				ps5000SetChannel(g_hScope, (PS5000_CHANNEL)i, 0, 1, PS5000_1V);
+				break;
 			case PICO5000A:
 				ps5000aSetChannel(g_hScope, (PS5000A_CHANNEL)i, 0, PS5000A_DC, PS5000A_1V, 0.0f);
+				break;
+			case PICO6000:
+				//ps6000SetChannel(g_hScope, (PS6000_CHANNEL)i, 0, PS6000_DC_1M, PS6000_1V, 0.0f, PS6000_BW_FULL);
 				break;
 			case PICO6000A:
 				ps6000aSetChannelOff(g_hScope, (PICO_CHANNEL)i);
@@ -333,11 +348,18 @@ int main(int argc, char* argv[])
 		g_range_3000a[i] = PS3000A_1V;
 		g_range_4000a[i] = PS4000A_1V;
 		g_range_5000a[i] = PS5000A_1V;
+		//g_range_2000[i] = PS2000_1V;
+		//g_range_3000[i] = PS3000_1V;
+		//g_range_4000[i] = PS4000_1V;
+		g_range_5000[i] = PS5000_1V;
+		//g_range_6000[i] = PS6000_1V;
 		g_offset[i] = 0;
 		g_bandwidth[i] = PICO_BW_FULL;
 		g_bandwidth_3000a[i] = PS3000A_BW_FULL;
 		g_bandwidth_4000a[i] = PS4000A_BW_FULL;
 		g_bandwidth_5000a[i] = PS5000A_BW_FULL;
+		//g_bandwidth_6000[i] = PS6000_BW_FULL;
+		//g_bandwidth_4000[i] = 0;
 	}
 
 	//Figure out digital channel configuration
@@ -426,17 +448,32 @@ int main(int argc, char* argv[])
 	//Done
 	switch(g_pico_type)
 	{
+		case PICO2000:
+			//ps2000_close_unit(g_hScope);
+			break;
 		case PICO2000A:
 			ps2000aCloseUnit(g_hScope);
+			break;
+		case PICO3000:
+			//ps3000_close_unit(g_hScope);
 			break;
 		case PICO3000A:
 			ps3000aCloseUnit(g_hScope);
 			break;
+		case PICO4000:
+			//ps4000CloseUnit(g_hScope);
+			break;
 		case PICO4000A:
 			ps4000aCloseUnit(g_hScope);
 			break;
+		case PICO5000:
+			ps5000CloseUnit(g_hScope);
+			break;
 		case PICO5000A:
 			ps5000aCloseUnit(g_hScope);
+			break;
+		case PICO6000:
+			//ps6000CloseUnit(g_hScope);
 			break;
 		case PICO6000A:
 			ps6000aCloseUnit(g_hScope);
@@ -462,17 +499,32 @@ void OnQuit(int /*signal*/)
 	lock_guard<mutex> lock(g_mutex);
 	switch(g_pico_type)
 	{
+		case PICO2000:
+			//ps2000_close_unit(g_hScope);
+			break;
 		case PICO2000A:
 			ps2000aCloseUnit(g_hScope);
+			break;
+		case PICO3000:
+			//ps3000_close_unit(g_hScope);
 			break;
 		case PICO3000A:
 			ps3000aCloseUnit(g_hScope);
 			break;
+		case PICO4000:
+			//ps4000CloseUnit(g_hScope);
+			break;
 		case PICO4000A:
 			ps4000aCloseUnit(g_hScope);
 			break;
+		case PICO5000:
+			ps5000CloseUnit(g_hScope);
+			break;
 		case PICO5000A:
 			ps5000aCloseUnit(g_hScope);
+			break;
+		case PICO6000:
+			//ps6000CloseUnit(g_hScope);
 			break;
 		case PICO6000A:
 			ps6000aCloseUnit(g_hScope);
@@ -493,7 +545,17 @@ PICO_INFO Open2000()
 		g_series = 2;
 		g_pico_type = PICO2000A;
 		picoGetUnitInfo = ps2000aGetUnitInfo;
+		return status;
 	}
+
+	/*status = ps2000_open_unit();
+	if(status == PICO_OK)
+	{
+		g_series = 2;
+		g_pico_type = PICO2000;
+		//TODO
+		//picoGetUnitInfo = ps2000_get_unit_info;
+	}*/
 	return status;
 }
 PICO_INFO Open3000()
@@ -522,7 +584,17 @@ PICO_INFO Open3000()
 		g_series = 3;
 		g_pico_type = PICOPSOSPA;
 		picoGetUnitInfo = psospaGetUnitInfo;
+		return status;
 	}
+
+	/*status = ps3000_open_unit();
+	if(status == PICO_OK)
+	{
+		g_series = 3;
+		g_pico_type = PICO3000;
+		//TODO
+		//picoGetUnitInfo = ps3000_get_unit_info;
+	}*/
 	return status;
 }
 
@@ -543,7 +615,16 @@ PICO_INFO Open4000()
 		g_series = 4;
 		g_pico_type = PICO4000A;
 		picoGetUnitInfo = ps4000aGetUnitInfo;
+		return status;
 	}
+
+	/*status = ps4000OpenUnit(&g_hScope);
+	if(status == PICO_OK)
+	{
+		g_series = 4;
+		g_pico_type = PICO4000;
+		picoGetUnitInfo = ps4000GetUnitInfo;
+	}*/
 	return status;
 }
 
@@ -564,6 +645,15 @@ PICO_INFO Open5000()
 		g_series = 5;
 		g_pico_type = PICO5000A;
 		picoGetUnitInfo = ps5000aGetUnitInfo;
+		return status;
+	}
+
+	status = ps5000OpenUnit(&g_hScope);
+	if(status == PICO_OK)
+	{
+		g_series = 5;
+		g_pico_type = PICO5000;
+		picoGetUnitInfo = ps5000GetUnitInfo;
 	}
 	return status;
 }
@@ -576,6 +666,15 @@ PICO_INFO Open6000()
 		g_series = 6;
 		g_pico_type = PICO6000A;
 		picoGetUnitInfo = ps6000aGetUnitInfo;
+		return status;
 	}
+
+	/*status = ps6000OpenUnit(&g_hScope, NULL);
+	if(status == PICO_OK)
+	{
+		g_series = 6;
+		g_pico_type = PICO6000;
+		picoGetUnitInfo = ps6000GetUnitInfo;
+	}*/
 	return status;
 }
