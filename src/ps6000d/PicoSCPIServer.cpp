@@ -2379,9 +2379,9 @@ void PicoSCPIServer::ReconfigAWG()
 			{
 				uint32_t delta= 0;
 				//TODO The generator steps through the waveform by adding a "delta phase" between 1 and 2^32-1 to the phase counter every 8 ns.
-				status = ps5000aSigGenFrequencyToPhase(g_hScope, g_awgFreq, PS5000A_SINGLE, g_awgBufferSize, &delta);
+				status = ps5000SigGenFrequencyToPhase(g_hScope, g_awgFreq, PS5000_SINGLE, g_awgBufferSize, &delta);
 				if(status != PICO_OK)
-					LogError("ps4000SigGenFrequencyToPhase failed, code 0x%x\n", status);
+					LogError("ps5000SigGenFrequencyToPhase failed, code 0x%x\n", status);
 				status =  ps5000SetSigGenArbitrary(
 							  g_hScope,
 							  tempOffset*1e6,
@@ -4164,7 +4164,6 @@ void UpdateChannel(size_t chan)
 				psospaGetDeviceResolution(g_hScope, &currentRes);
 				psospaGetAdcLimits(g_hScope, currentRes, 0, &scaleVal);
 				g_scaleValue = scaleVal;
-	LogWarning("-: %f\t +: %f\t\n", -g_range_3000e[chan], g_range_3000e[chan]);
 
 				//We use software triggering based on raw ADC codes.
 				//Any time we change the frontend configuration on the trigger channel, it has to be reconfigured.
