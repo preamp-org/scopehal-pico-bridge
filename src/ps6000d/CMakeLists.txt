@@ -27,11 +27,11 @@ elseif(APPLE)
 	include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps5000a)
 	include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps6000a)
 	include_directories(${PICO_SDK_FRAMEWORK}/Headers/libpsospa)
-	#include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps2000)
-	#include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps3000)
-	#include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps4000)
+	include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps2000)
+	include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps3000)
+	include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps4000)
 	include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps5000)
-	#include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps6000)
+	include_directories(${PICO_SDK_FRAMEWORK}/Headers/libps6000)
 else()
 	# Linux specific include paths
 	include_directories(${PICO_SDK_PATH}/include/libps2000a)
@@ -40,11 +40,11 @@ else()
 	include_directories(${PICO_SDK_PATH}/include/libps5000a)
 	include_directories(${PICO_SDK_PATH}/include/libps6000a)
 	include_directories(${PICO_SDK_PATH}/include/libpsospa)
-	#include_directories(${PICO_SDK_PATH}/include/libps2000)
-	#include_directories(${PICO_SDK_PATH}/include/libps3000)
-	#include_directories(${PICO_SDK_PATH}/include/libps4000)
+	include_directories(${PICO_SDK_PATH}/include/libps2000)
+	include_directories(${PICO_SDK_PATH}/include/libps3000)
+	include_directories(${PICO_SDK_PATH}/include/libps4000)
 	include_directories(${PICO_SDK_PATH}/include/libps5000)
-	#include_directories(${PICO_SDK_PATH}/include/libps6000)
+	include_directories(${PICO_SDK_PATH}/include/libps6000)
 endif()
 
 ###############################################################################
@@ -69,11 +69,11 @@ if(WIN32)
 	${PICO_SDK_PATH}/lib/ps5000a.lib
 	${PICO_SDK_PATH}/lib/ps6000a.lib
 	${PICO_SDK_PATH}/lib/psospa.lib
-	#${PICO_SDK_PATH}/lib/ps2000.lib
-	#${PICO_SDK_PATH}/lib/ps3000.lib
-	#${PICO_SDK_PATH}/lib/ps4000.lib
+	${PICO_SDK_PATH}/lib/ps2000.lib
+	${PICO_SDK_PATH}/lib/ps3000.lib
+	${PICO_SDK_PATH}/lib/ps4000.lib
 	${PICO_SDK_PATH}/lib/ps5000.lib
-	#${PICO_SDK_PATH}/lib/ps6000.lib
+	${PICO_SDK_PATH}/lib/ps6000.lib
 	)
 elseif(APPLE)
 	target_link_libraries(ps6000d
@@ -86,11 +86,11 @@ elseif(APPLE)
 	${PICO_SDK_FRAMEWORK}/Libraries/libps5000a/libps5000a.dylib
 	${PICO_SDK_FRAMEWORK}/Libraries/libps6000a/libps6000a.dylib
 	${PICO_SDK_FRAMEWORK}/Libraries/libpsospa/libpsospa.dylib
-	#${PICO_SDK_FRAMEWORK}/Libraries/libps2000/libps2000.dylib
-	#${PICO_SDK_FRAMEWORK}/Libraries/libps3000/libps3000.dylib
-	#${PICO_SDK_FRAMEWORK}/Libraries/libps4000/libps4000.dylib
+	${PICO_SDK_FRAMEWORK}/Libraries/libps2000/libps2000.dylib
+	${PICO_SDK_FRAMEWORK}/Libraries/libps3000/libps3000.dylib
+	${PICO_SDK_FRAMEWORK}/Libraries/libps4000/libps4000.dylib
 	${PICO_SDK_FRAMEWORK}/Libraries/libps5000/libps5000.dylib
-	#${PICO_SDK_FRAMEWORK}/Libraries/libps6000/libps6000.dylib
+	${PICO_SDK_FRAMEWORK}/Libraries/libps6000/libps6000.dylib
 	)
 else()
 	# Linux specific linker
@@ -104,10 +104,10 @@ else()
 	${PICO_SDK_PATH}/lib/libps5000a.so
 	${PICO_SDK_PATH}/lib/libps6000a.so
 	${PICO_SDK_PATH}/lib/libpsospa.so
-	#${PICO_SDK_PATH}/lib/libps2000.so
-	#${PICO_SDK_PATH}/lib/libps3000.so
-	#${PICO_SDK_PATH}/lib/libps4000.so
+	${PICO_SDK_PATH}/lib/libps2000.so
+	${PICO_SDK_PATH}/lib/libps3000.so
+	${PICO_SDK_PATH}/lib/libps4000.so
 	${PICO_SDK_PATH}/lib/libps5000.so
-	#${PICO_SDK_PATH}/lib/libps6000.so
+	${PICO_SDK_PATH}/lib/libps6000.so
 	)
 endif()

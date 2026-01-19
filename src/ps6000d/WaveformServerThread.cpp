@@ -94,19 +94,19 @@ void WaveformServerThread()
 			switch(g_pico_type)
 			{
 				case PICO2000:
-					//ready = ps2000_ready(g_hScope);
+					ready = ps2000_ready(g_hScope);
 					break;
 				case PICO2000A:
 					ps2000aIsReady(g_hScope, &ready);
 					break;
 				case PICO3000:
-					//ready = ps3000_ready(g_hScope);
+					ready = ps3000_ready(g_hScope);
 					break;
 				case PICO3000A:
 					ps3000aIsReady(g_hScope, &ready);
 					break;
 				case PICO4000:
-					//ps4000IsReady(g_hScope, &ready);
+					ps4000IsReady(g_hScope, &ready);
 					break;
 				case PICO4000A:
 					ps4000aIsReady(g_hScope, &ready);
@@ -118,7 +118,7 @@ void WaveformServerThread()
 					ps5000aIsReady(g_hScope, &ready);
 					break;
 				case PICO6000:
-					//ps6000IsReady(g_hScope, &ready);
+					ps6000IsReady(g_hScope, &ready);
 					break;
 				case PICO6000A:
 					ps6000aIsReady(g_hScope, &ready);
@@ -151,19 +151,19 @@ void WaveformServerThread()
 			switch(g_pico_type)
 			{
 				case PICO2000:
-					//status = ps2000_stop(g_hScope);
+					status = ps2000_stop(g_hScope);
 					break;
 				case PICO2000A:
 					status = ps2000aStop(g_hScope);
 					break;
 				case PICO3000:
-					//status = ps3000_stop(g_hScope);
+					status = ps3000_stop(g_hScope);
 					break;
 				case PICO3000A:
 					status = ps3000aStop(g_hScope);
 					break;
 				case PICO4000:
-					//status = ps4000Stop(g_hScope);
+					status = ps4000Stop(g_hScope);
 					break;
 				case PICO4000A:
 					status = ps4000aStop(g_hScope);
@@ -175,7 +175,7 @@ void WaveformServerThread()
 					status = ps5000aStop(g_hScope);
 					break;
 				case PICO6000:
-					//status = ps6000Stop(g_hScope);
+					status = ps6000Stop(g_hScope);
 					break;
 				case PICO6000A:
 					status = ps6000aStop(g_hScope);
@@ -200,21 +200,21 @@ void WaveformServerThread()
 					switch(g_pico_type)
 					{
 						case PICO2000:
-							//TODO N/A?
+							//N/A?
 							break;
 						case PICO2000A:
 							ps2000aSetDataBuffer(g_hScope, (PS2000A_CHANNEL)ch, NULL,
 												0, 0, PS2000A_RATIO_MODE_NONE);
 							break;
 						case PICO3000:
-							//TODO N/A?
+							//N/A?
 							break;
 						case PICO3000A:
 							ps3000aSetDataBuffer(g_hScope, (PS3000A_CHANNEL)ch, NULL,
 												0, 0, PS3000A_RATIO_MODE_NONE);
 							break;
 						case PICO4000:
-							//ps4000SetDataBuffer(g_hScope, (PS4000_CHANNEL)ch, NULL, 0);
+							ps4000SetDataBuffer(g_hScope, (PS4000_CHANNEL)ch, NULL, 0);
 							break;
 						case PICO4000A:
 							ps4000aSetDataBuffer(g_hScope, (PS4000A_CHANNEL)ch, NULL,
@@ -228,8 +228,8 @@ void WaveformServerThread()
 												0, 0, PS5000A_RATIO_MODE_NONE);
 							break;
 						case PICO6000:
-							//ps6000SetDataBuffer(g_hScope, (PS6000_CHANNEL)ch, NULL,
-							//					0, PS6000_RATIO_MODE_NONE);
+							ps6000SetDataBuffer(g_hScope, (PS6000_CHANNEL)ch, NULL,
+												0, PS6000_RATIO_MODE_NONE);
 							break;
 						case PICO6000A:
 							ps6000aSetDataBuffer(g_hScope, ch, NULL,
@@ -265,22 +265,22 @@ void WaveformServerThread()
 					switch(g_pico_type)
 					{
 						case PICO2000:
-							//TODO N/A?
+							//N/A?
 							break;
 						case PICO2000A:
 							status = ps2000aSetDataBuffer(g_hScope, (PS2000A_CHANNEL)ch, waveformBuffers[i],
 														g_captureMemDepth, 0, PS2000A_RATIO_MODE_NONE);
 							break;
 						case PICO3000:
-							//TODO N/A?
+							//N/A?
 							break;
 						case PICO3000A:
 							status = ps3000aSetDataBuffer(g_hScope, (PS3000A_CHANNEL)ch, waveformBuffers[i],
 														g_captureMemDepth, 0, PS3000A_RATIO_MODE_NONE);
 							break;
 						case PICO4000:
-							//status = ps4000SetDataBuffer(g_hScope, (PS4000_CHANNEL)ch, waveformBuffers[i],
-							//							g_captureMemDepth);
+							status = ps4000SetDataBuffer(g_hScope, (PS4000_CHANNEL)ch, waveformBuffers[i],
+														g_captureMemDepth);
 							break;
 						case PICO4000A:
 							status = ps4000aSetDataBuffer(g_hScope, (PS4000A_CHANNEL)ch, waveformBuffers[i],
@@ -295,8 +295,8 @@ void WaveformServerThread()
 														g_captureMemDepth, 0, PS5000A_RATIO_MODE_NONE);
 							break;
 						case PICO6000:
-							//status = ps6000SetDataBuffer(g_hScope, (PS6000_CHANNEL)ch, waveformBuffers[i],
-							//							g_captureMemDepth, PS6000_RATIO_MODE_NONE);
+							status = ps6000SetDataBuffer(g_hScope, (PS6000_CHANNEL)ch, waveformBuffers[i],
+														g_captureMemDepth, PS6000_RATIO_MODE_NONE);
 							break;
 						case PICO6000A:
 							status = ps6000aSetDataBuffer(g_hScope, (PICO_CHANNEL)ch, waveformBuffers[i],
@@ -321,33 +321,33 @@ void WaveformServerThread()
 			switch(g_pico_type)
 			{
 				case PICO2000:
-					//status = ps2000_get_values(g_hScope, waveformBuffers[0], waveformBuffers[1],
-					//						NULL, NULL, &overflow, &numSamples_uint);
-					//numSamples = numSamples_uint;
+					status = ps2000_get_values(g_hScope, waveformBuffers[0], waveformBuffers[1],
+											NULL, NULL, &overflow, numSamples_int);
+					numSamples = numSamples_int;
 					break;
 				case PICO2000A:
 					status = ps2000aGetValues(g_hScope, 0, &numSamples_uint, 1, PS2000A_RATIO_MODE_NONE, 0, &overflow);
 					numSamples = numSamples_uint;
 					break;
 				case PICO3000:
-					//status = ps3000_get_values(g_hScope, waveformBuffers[0], waveformBuffers[1],
-					//						waveformBuffers[2], waveformBuffers[3], &overflow, &numSamples_int);
-					//numSamples = numSamples_int;
+					status = ps3000_get_values(g_hScope, waveformBuffers[0], waveformBuffers[1],
+											waveformBuffers[2], waveformBuffers[3], &overflow, numSamples_int);
+					numSamples = numSamples_int;
 					break;
 				case PICO3000A:
 					status = ps3000aGetValues(g_hScope, 0, &numSamples_uint, 1, PS3000A_RATIO_MODE_NONE, 0, &overflow);
 					numSamples = numSamples_uint;
 					break;
 				case PICO4000:
-					//status = ps4000GetValues(g_hScope, 0, &numSamples_uint, 1, RATIO_MODE_NONE, 0, &overflow);
-					//numSamples = numSamples_uint;
+					status = ps4000GetValues(g_hScope, 0, &numSamples_uint, 1, PS4000_RATIO_MODE_NONE, 0, &overflow);
+					numSamples = numSamples_uint;
 					break;
 				case PICO4000A:
 					status = ps4000aGetValues(g_hScope, 0, &numSamples_uint, 1, PS4000A_RATIO_MODE_NONE, 0, &overflow);
 					numSamples = numSamples_uint;
 					break;
 				case PICO5000:
-					status = ps5000GetValues(g_hScope, 0, &numSamples_uint, 1, RATIO_MODE_NONE, 0, &overflow);
+					status = ps5000GetValues(g_hScope, 0, &numSamples_uint, 1, PS5000_RATIO_MODE_NONE, 0, &overflow);
 					numSamples = numSamples_uint;
 					break;
 				case PICO5000A:
@@ -355,8 +355,8 @@ void WaveformServerThread()
 					numSamples = numSamples_uint;
 					break;
 				case PICO6000:
-					//status = ps6000GetValues(g_hScope, 0, &numSamples_uint, 1, PS6000_RATIO_MODE_NONE, 0, &overflow);
-					//numSamples = numSamples_uint;
+					status = ps6000GetValues(g_hScope, 0, &numSamples_uint, 1, PS6000_RATIO_MODE_NONE, 0, &overflow);
+					numSamples = numSamples_uint;
 					break;
 				case PICO6000A:
 					status = ps6000aGetValues(g_hScope, 0, &numSamples, 1, PICO_RATIO_MODE_RAW, 0, &overflow);

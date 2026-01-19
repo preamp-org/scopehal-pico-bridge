@@ -48,11 +48,11 @@
 #include "ps3000aApi.h"
 #include "ps2000aApi.h"
 #include "psospaApi.h"
-//#include "ps6000Api.h"
-#include "ps5000Api.h"
-//#include "ps4000Api.h"
-//#include "ps3000.h"
-//#include "ps2000.h"
+#include "ps6000mod.h"
+#include "ps5000mod.h"
+#include "ps4000mod.h"
+#include "ps3000mod.h"
+#include "ps2000mod.h"
 #include "PicoStatus.h"
 #include "PicoVersion.h"
 
@@ -96,11 +96,11 @@ extern std::map<size_t, bool> g_channelOn;
 extern std::map<size_t, double> g_roundedRange;
 extern std::map<size_t, PICO_COUPLING> g_coupling;
 extern std::map<size_t, PICO_CONNECT_PROBE_RANGE> g_range;
-//extern std::map<size_t, PS2000_RANGE> g_range_2000;
-//extern std::map<size_t, PS3000_RANGE> g_range_3000;
-//extern std::map<size_t, PS4000_RANGE> g_range_4000;
+extern std::map<size_t, PS2000_RANGE> g_range_2000;
+extern std::map<size_t, PS3000_RANGE> g_range_3000;
+extern std::map<size_t, PS4000_RANGE> g_range_4000;
 extern std::map<size_t, PS5000_RANGE> g_range_5000;
-//extern std::map<size_t, PS6000_RANGE> g_range_6000;
+extern std::map<size_t, PS6000_RANGE> g_range_6000;
 extern std::map<size_t, PS2000A_RANGE> g_range_2000a;
 extern std::map<size_t, PS3000A_RANGE> g_range_3000a;
 extern std::map<size_t, PS4000A_RANGE> g_range_4000a;
@@ -110,11 +110,11 @@ extern std::map<size_t, double> g_range_3000e;
 extern std::map<size_t, double> g_offset;
 extern std::map<size_t, double> g_msoPodThresholdVoltage;
 extern std::map<size_t, PICO_BANDWIDTH_LIMITER> g_bandwidth;	//6000A,PSOSPA
-//extern std::map<size_t, PS6000_BANDWIDTH_LIMITER> g_bandwidth_6000;
+extern std::map<size_t, PS6000_BANDWIDTH_LIMITER> g_bandwidth_6000;
 extern std::map<size_t, PS3000A_BANDWIDTH_LIMITER> g_bandwidth_3000a;
 extern std::map<size_t, PS4000A_BANDWIDTH_LIMITER> g_bandwidth_4000a;
 extern std::map<size_t, PS5000A_BANDWIDTH_LIMITER> g_bandwidth_5000a;
-//extern std::map<size_t, int16_t> g_bandwidth_4000;
+extern std::map<size_t, int16_t> g_bandwidth_4000;
 
 extern bool g_msoPodEnabled[2];
 extern bool g_msoPodEnabledDuringArm[2];

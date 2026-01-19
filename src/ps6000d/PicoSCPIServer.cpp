@@ -154,11 +154,11 @@ using namespace std;
 map<size_t, bool> g_channelOn;
 map<size_t, PICO_COUPLING> g_coupling;
 map<size_t, PICO_CONNECT_PROBE_RANGE> g_range;
-//map<size_t, PS2000_RANGE> g_range_2000;
-//map<size_t, PS3000_RANGE> g_range_3000;
-//map<size_t, PS4000_RANGE> g_range_4000;
+map<size_t, PS2000_RANGE> g_range_2000;
+map<size_t, PS3000_RANGE> g_range_3000;
+map<size_t, PS4000_RANGE> g_range_4000;
 map<size_t, PS5000_RANGE> g_range_5000;
-//map<size_t, PS6000_RANGE> g_range_6000;
+map<size_t, PS6000_RANGE> g_range_6000;
 map<size_t, PS2000A_RANGE> g_range_2000a;
 map<size_t, PS3000A_RANGE> g_range_3000a;
 map<size_t, PS4000A_RANGE> g_range_4000a;
@@ -169,11 +169,11 @@ map<size_t, double> g_range_3000e;
 map<size_t, double> g_offset;
 map<size_t, double> g_msoPodThresholdVoltage;
 map<size_t, PICO_BANDWIDTH_LIMITER> g_bandwidth;
-//map<size_t, PS6000_BANDWIDTH_LIMITER> g_bandwidth_6000;
+map<size_t, PS6000_BANDWIDTH_LIMITER> g_bandwidth_6000;
 map<size_t, PS3000A_BANDWIDTH_LIMITER> g_bandwidth_3000a;
 map<size_t, PS4000A_BANDWIDTH_LIMITER> g_bandwidth_4000a;
 map<size_t, PS5000A_BANDWIDTH_LIMITER> g_bandwidth_5000a;
-//map<size_t, int16_t> g_bandwidth_4000;
+map<size_t, int16_t> g_bandwidth_4000;
 size_t g_memDepth = 1000000;
 size_t g_scaleValue = 32512;
 size_t g_adcBits = 8;
@@ -226,16 +226,16 @@ PS4000A_EXTRA_OPERATIONS g_awgPS4000AOperation = PS4000A_ES_OFF;
 PS4000A_WAVE_TYPE g_awgPS4000AWaveType = PS4000A_SINE;
 PS5000A_EXTRA_OPERATIONS g_awgPS5000AOperation = PS5000A_ES_OFF;
 PS5000A_WAVE_TYPE g_awgPS5000AWaveType = PS5000A_SINE;
-//PS6000_EXTRA_OPERATIONS g_awgPS6000Operation = PS6000_ES_OFF;
-//PS6000_WAVE_TYPE g_awgPS6000WaveType = PS6000_SINE;
+PS6000_EXTRA_OPERATIONS g_awgPS6000Operation = PS6000_ES_OFF;
+PS6000_WAVE_TYPE g_awgPS6000WaveType = PS6000_SINE;
 int16_t g_awgPS5000Operation = 0;
-WAVE_TYPE g_awgPS5000WaveType = PS5000_SINE;
-//int16_t g_awgPS4000Operation = 0;
-//WAVE_TYPE g_awgPS4000WaveType = PS4000_SINE;
-//int16_t g_awgPS3000Operation = 0;
-//PS3000_WAVE_TYPES g_awgPS3000WaveType = PS3000_SINE;
-//int16_t g_awgPS2000Operation = 0;
-//PS2000_WAVE_TYPE g_awgPS2000WaveType = PS2000_SINE;
+PS5000_WAVE_TYPE g_awgPS5000WaveType = PS5000_SINE;
+int16_t g_awgPS4000Operation = 0;
+PS4000_WAVE_TYPE g_awgPS4000WaveType = PS4000_SINE;
+int16_t g_awgPS3000Operation = 0;
+PS3000_WAVE_TYPES g_awgPS3000WaveType = PS3000_SINE;
+int16_t g_awgPS2000Operation = 0;
+PS2000_WAVE_TYPE g_awgPS2000WaveType = PS2000_SINE;
 
 //Struct easily allows for adding new models
 struct WaveformType
@@ -249,12 +249,12 @@ struct WaveformType
 	PS4000A_EXTRA_OPERATIONS op4000A;
 	PS5000A_WAVE_TYPE type5000A;
 	PS5000A_EXTRA_OPERATIONS op5000A;
-//	PS6000_WAVE_TYPE type6000;
-//	PS6000_EXTRA_OPERATIONS op6000;
-	WAVE_TYPE type5000;
-//	WAVE_TYPE type4000;
-//	PS2000_WAVE_TYPE type2000;
-//	PS3000_WAVE_TYPES type3000;	//3000 has the least options, hence we put it last
+	PS6000_WAVE_TYPE type6000;
+	PS6000_EXTRA_OPERATIONS op6000;
+	PS5000_WAVE_TYPE type5000;
+	PS4000_WAVE_TYPE type4000;
+	PS2000_WAVE_TYPE type2000;
+	PS3000_WAVE_TYPES type3000;	//3000 has the least options, hence we put it last
 };
 const map<string, WaveformType> g_waveformTypes =
 {
@@ -263,84 +263,108 @@ const map<string, WaveformType> g_waveformTypes =
 					PS3000A_SINE,           PS3000A_ES_OFF,
 					PS4000A_SINE,           PS4000A_ES_OFF,
 					PS5000A_SINE,           PS5000A_ES_OFF,
-					PS5000_SINE
+					PS6000_SINE,            PS6000_ES_OFF,
+					PS5000_SINE,            PS4000_SINE,
+					PS2000_SINE,            PS3000_SINE
 					}},
 	{"SQUARE",     {PICO_SQUARE,
 					PS2000A_SQUARE,         PS2000A_ES_OFF,
 					PS3000A_SQUARE,         PS3000A_ES_OFF,
 					PS4000A_SQUARE,         PS4000A_ES_OFF,
 					PS5000A_SQUARE,         PS5000A_ES_OFF,
-					PS5000_SQUARE
+					PS6000_SQUARE,          PS6000_ES_OFF,
+					PS5000_SQUARE,          PS4000_SQUARE,
+					PS2000_SQUARE,          PS3000_SQUARE
 					}},
 	{"TRIANGLE",   {PICO_TRIANGLE,
 					PS2000A_TRIANGLE,       PS2000A_ES_OFF,
 					PS3000A_TRIANGLE,       PS3000A_ES_OFF,
 					PS4000A_TRIANGLE,       PS4000A_ES_OFF,
 					PS5000A_TRIANGLE,       PS5000A_ES_OFF,
-					PS5000_TRIANGLE
+					PS6000_TRIANGLE,        PS6000_ES_OFF,
+					PS5000_TRIANGLE,        PS4000_TRIANGLE,
+					PS2000_TRIANGLE,        PS3000_TRIANGLE
 					}},
 	{"RAMP_UP",    {PICO_RAMP_UP,
 					PS2000A_RAMP_UP,        PS2000A_ES_OFF,
 					PS3000A_RAMP_UP,        PS3000A_ES_OFF,
 					PS4000A_RAMP_UP,        PS4000A_ES_OFF,
 					PS5000A_RAMP_UP,        PS5000A_ES_OFF,
-					PS5000_RAMP_UP
+					PS6000_RAMP_UP,         PS6000_ES_OFF,
+					PS5000_RAMP_UP,         PS4000_RAMP_UP,
+					PS2000_RAMP_UP,         PS3000_SINE
 					}},
 	{"RAMP_DOWN",  {PICO_RAMP_DOWN,
 					PS2000A_RAMP_DOWN,      PS2000A_ES_OFF,
 					PS3000A_RAMP_DOWN,      PS3000A_ES_OFF,
 					PS4000A_RAMP_DOWN,      PS4000A_ES_OFF,
 					PS5000A_RAMP_DOWN,      PS5000A_ES_OFF,
-					PS5000_RAMP_DOWN
+					PS6000_RAMP_DOWN,       PS6000_ES_OFF,
+					PS5000_RAMP_DOWN,       PS4000_RAMP_DOWN,
+					PS2000_RAMP_DOWN,       PS3000_SINE
 					}},
 	{"SINC",       {PICO_SINC,
 					PS2000A_SINC,           PS2000A_ES_OFF,
 					PS3000A_SINC,           PS3000A_ES_OFF,
 					PS4000A_SINC,           PS4000A_ES_OFF,
 					PS5000A_SINC,           PS5000A_ES_OFF,
-					PS5000_SINC
+					PS6000_SINC,            PS6000_ES_OFF,
+					PS5000_SINC,            PS4000_SINC,
+					PS2000_SINC,            PS3000_SINE
 					}},
 	{"GAUSSIAN",   {PICO_GAUSSIAN,
 					PS2000A_GAUSSIAN,       PS2000A_ES_OFF,
 					PS3000A_GAUSSIAN,       PS3000A_ES_OFF,
 					PS4000A_GAUSSIAN,       PS4000A_ES_OFF,
 					PS5000A_GAUSSIAN,       PS5000A_ES_OFF,
-					PS5000_GAUSSIAN
+					PS6000_GAUSSIAN,        PS6000_ES_OFF,
+					PS5000_GAUSSIAN,        PS4000_GAUSSIAN,
+					PS2000_GAUSSIAN,        PS3000_SINE
 					}},
 	{"HALF_SINE",  {PICO_HALF_SINE,
 					PS2000A_HALF_SINE,      PS2000A_ES_OFF,
 					PS3000A_HALF_SINE,      PS3000A_ES_OFF,
 					PS4000A_HALF_SINE,      PS4000A_ES_OFF,
 					PS5000A_HALF_SINE,      PS5000A_ES_OFF,
-					PS5000_HALF_SINE
+					PS6000_HALF_SINE,       PS6000_ES_OFF,
+					PS5000_HALF_SINE,       PS4000_HALF_SINE,
+					PS2000_HALF_SINE,       PS3000_SINE
 					}},
 	{"DC",         {PICO_DC_VOLTAGE,
 					PS2000A_DC_VOLTAGE,     PS2000A_ES_OFF,
 					PS3000A_DC_VOLTAGE,     PS3000A_ES_OFF,
 					PS4000A_DC_VOLTAGE,     PS4000A_ES_OFF,
 					PS5000A_DC_VOLTAGE,     PS5000A_ES_OFF,
-					PS5000_DC_VOLTAGE
+					PS6000_DC_VOLTAGE,      PS6000_ES_OFF,
+					PS5000_DC_VOLTAGE,      PS4000_DC_VOLTAGE,
+					PS2000_DC_VOLTAGE,      PS3000_SINE
 					}},
 	{"WHITENOISE", {PICO_WHITENOISE,
 					PS2000A_SINE,           PS2000A_WHITENOISE,
 					PS3000A_SINE,           PS3000A_WHITENOISE,
 					PS4000A_SINE,           PS4000A_WHITENOISE,
 					PS5000A_SINE,           PS5000A_WHITENOISE,
-					PS5000_SINE
+					PS6000_SINE,            PS6000_WHITENOISE,
+					PS5000_SINE,            PS4000_SINE,
+					PS2000_SINE,            PS3000_SINE
 					}},
 	{"PRBS",       {PICO_PRBS,
 					PS2000A_SINE,           PS2000A_PRBS,
 					PS3000A_SINE,           PS3000A_PRBS,
 					PS4000A_SINE,           PS4000A_PRBS,
 					PS5000A_SINE,           PS5000A_PRBS,
-					PS5000_SINE
+					PS6000_SINE,            PS6000_PRBS,
+					PS5000_SINE,            PS4000_SINE,
+					PS2000_SINE,            PS3000_SINE
 					}},
 	{"ARBITRARY",  {PICO_ARBITRARY,
 					PS2000A_MAX_WAVE_TYPES, PS2000A_ES_OFF,
 					PS3000A_MAX_WAVE_TYPES, PS3000A_ES_OFF,
 					PS4000A_MAX_WAVE_TYPES, PS4000A_ES_OFF,
 					PS5000A_MAX_WAVE_TYPES, PS5000A_ES_OFF,
-					MAX_WAVE_TYPES
+					PS6000_MAX_WAVE_TYPES,  PS6000_ES_OFF,
+					PS5000_MAX_WAVE_TYPES,  PS4000_MAX_WAVE_TYPES,
+					PS2000_SINE,            PS3000_MAX_WAVE_TYPES
 					}}
 	//FIX: PS3000A_MAX_WAVE_TYPES is used as placeholder for arbitrary generation till a better workaround is found
 };
@@ -357,15 +381,15 @@ extern uint32_t g_lastTxSeq;
 PicoSCPIServer::PicoSCPIServer(ZSOCKET sock)
 	: BridgeSCPIServer(sock)
 {
-	//external trigger is fixed range of -1 to +1V
-	g_roundedRange[PICO_TRIGGER_AUX] = 2;
+	g_roundedRange[PICO_TRIGGER_AUX] = 1;
 	g_offset[PICO_TRIGGER_AUX] = 0;
 
-	//set model dependent AWG buffer size
+	//set model dependent AWG buffer size and external trigger input voltage range
 	switch(g_series)
 	{
 		case 2:
 		{
+			g_roundedRange[PICO_TRIGGER_AUX] = 5;
 			g_awgBufferSize = 4096;
 			if(g_model.find("B") == string::npos)
 				g_awgBufferSize = 32768;
@@ -375,6 +399,7 @@ PicoSCPIServer::PicoSCPIServer(ZSOCKET sock)
 		}
 		case 3:
 		{
+			g_roundedRange[PICO_TRIGGER_AUX] = 5;
 			g_awgBufferSize = 32768;
 			if( (g_model.find("06A") != string::npos) || (g_model.find("06B") != string::npos) )
 				g_awgBufferSize = 16384;
@@ -388,24 +413,35 @@ PicoSCPIServer::PicoSCPIServer(ZSOCKET sock)
 		{
 			g_awgBufferSize = 16384;
 			if(g_model.find("4262") != string::npos)
+			{
+				g_roundedRange[PICO_TRIGGER_AUX] = 5;
 				g_awgBufferSize = 4096;
+			}
 			if( (g_model.find("4226") != string::npos) || (g_model.find("4227") != string::npos) )
+			{
+				g_roundedRange[PICO_TRIGGER_AUX] = 20;
 				g_awgBufferSize = 8192;
+			}
 			break;
 		}
 		case 5:
 		{
+			g_roundedRange[PICO_TRIGGER_AUX] = 5;
 			g_awgBufferSize = 32768;
 			if(g_model.find("42B") != string::npos)
 				g_awgBufferSize = 16384;
 			if(g_model.find("44B") != string::npos)
 				g_awgBufferSize = 49152;
 			if( (g_model.find("5203") != string::npos) || (g_model.find("5204") != string::npos) )
+			{
+				g_roundedRange[PICO_TRIGGER_AUX] = 20;
 				g_awgBufferSize = 8192;
+			}
 			break;
 		}
 		case 6:
 		{
+			g_roundedRange[PICO_TRIGGER_AUX] = 1;
 			g_awgBufferSize = 40960;
 			if(g_model.find("E") == string::npos)
 				g_awgBufferSize = 16384;
@@ -427,19 +463,19 @@ PicoSCPIServer::~PicoSCPIServer()
 		switch(g_pico_type)
 		{
 			case PICO2000:
-				//ps2000_set_channel(g_hScope, (PS2000_CHANNEL)it.first, 0, 1, PS2000_1V);
+				ps2000_set_channel(g_hScope, (PS2000_CHANNEL)it.first, 0, 1, PS2000_1V);
 				break;
 			case PICO2000A:
 				ps2000aSetChannel(g_hScope, (PS2000A_CHANNEL)it.first, 0, PS2000A_DC, PS2000A_1V, 0.0f);
 				break;
 			case PICO3000:
-				//ps3000_set_channel(g_hScope, (PS3000_CHANNEL)it.first, 0, 1, PS3000_1V);
+				ps3000_set_channel(g_hScope, (PS3000_CHANNEL)it.first, 0, 1, PS3000_1V);
 				break;
 			case PICO3000A:
 				ps3000aSetChannel(g_hScope, (PS3000A_CHANNEL)it.first, 0, PS3000A_DC, PS3000A_1V, 0.0f);
 				break;
 			case PICO4000:
-				//ps4000SetChannel(g_hScope, (PS4000_CHANNEL)it.first, 0, 1, PS4000_1V);
+				ps4000SetChannel(g_hScope, (PS4000_CHANNEL)it.first, 0, 1, PS4000_1V);
 				break;
 			case PICO4000A:
 				ps4000aSetChannel(g_hScope, (PS4000A_CHANNEL)it.first, 0, PS4000A_DC, PICO_X1_PROBE_1V, 0.0f);
@@ -451,7 +487,7 @@ PicoSCPIServer::~PicoSCPIServer()
 				ps5000aSetChannel(g_hScope, (PS5000A_CHANNEL)it.first, 0, PS5000A_DC, PS5000A_1V, 0.0f);
 				break;
 			case PICO6000:
-				//ps6000SetChannel(g_hScope, (PS6000_CHANNEL)it.first, 0, PS6000_DC_1M, PS6000_1V, 0.0f, PS6000_BW_FULL);
+				ps6000SetChannel(g_hScope, (PS6000_CHANNEL)it.first, 0, PS6000_DC_1M, PS6000_1V, 0.0f, PS6000_BW_FULL);
 				break;
 			case PICO6000A:
 				ps6000aSetChannelOff(g_hScope, (PICO_CHANNEL)it.first);
@@ -622,8 +658,8 @@ bool PicoSCPIServer::OnQuery(
 				break;
 			case PICO4000:
 				//Workaround: 4262 has 200kHz limiter
-				//if(g_bandwidth_4000[channelId] != 0)
-				//	ret = "1";
+				if(g_bandwidth_4000[channelId] != 0)
+					ret = "1";
 				break;
 			case PICO4000A:
 				if(g_bandwidth_4000a[channelId] == PS4000A_BW_1MHZ)
@@ -637,10 +673,10 @@ bool PicoSCPIServer::OnQuery(
 					ret = "20";
 				break;
 			case PICO6000:
-				/*if(g_bandwidth_6000[channelId] == PS6000_BW_20MHZ)
+				if(g_bandwidth_6000[channelId] == PS6000_BW_20MHZ)
 					ret = "20";
 				else if(g_bandwidth_6000[channelId] == PS6000_BW_25MHZ)
-					ret = "25";*/
+					ret = "25";
 				break;
 			case PICO6000A:
 				if(g_bandwidth[channelId] == PICO_BW_20MHZ)
@@ -708,13 +744,39 @@ vector<size_t> PicoSCPIServer::GetSampleRates()
 	switch(g_pico_type)
 	{
 		case PICO2000:
-			//TODO
+			vec =
+			{
+				0,1,2,3,4,5,6,7,8,9,10
+			};
 			break;
 		case PICO3000:
-			//TODO
+			vec =
+			{
+				0,1,2,3,4,5,6,7,8,9,10
+			};
 			break;
 		case PICO4000:
-			//TODO
+			if( (g_model[3] == '6') || (g_model[3] == '7') )
+			{
+				vec =
+				{
+					0,1,2,3,4,6,7,12,22,27,42,52,102,127,202,252,402,502,627,1002,1252,2002,2502,3127,4002,5002,6252,10002,12502,15627,20002,25002,31252
+				};
+			}
+			else if(g_model == "4262")
+			{
+				vec =
+				{
+					0,1,3,4,7,9,15,19,24,31,39,49,63,79,99,124,127,159,199,249,319,399,499,639,799,999,1249,1279,1599,1999,2499,3199,3999,4999,6399,7999,9999
+				};
+			}
+			else
+			{
+				vec =
+				{
+					0,1,2,3,5,6,9,11,17,21,26,33,41,51,65,81,101,129,161,201,251,257,321,401,501,641,801,1001,1281,1601,2001,2501,2561,3201,4001,5001,6401,8001,10001,12801,16001,20001
+				};
+			}
 			break;
 		case PICO5000:
 			//Same as 5000A @ 8bit
@@ -722,9 +784,6 @@ vector<size_t> PicoSCPIServer::GetSampleRates()
 			{
 				0,1,2,3,4,6,7,10,12,18,22,27,42,52,82,102,127,162,202,252,402,502,627,802,1002,1252,1602,2002,2502,3127,4002,5002,6252,8002,10002,12502,15627,16002,20002,25002,31252,40002,50002,62502,80002,100002,125002
 			};
-			break;
-		case PICO6000:
-			//TODO
 			break;
 		case PICO2000A:
 			if(g_model.find("2205MSO") != string::npos)
@@ -845,6 +904,13 @@ vector<size_t> PicoSCPIServer::GetSampleRates()
 				}
 			}
 			break;
+		case PICO6000:
+			//Same as 6000A
+			vec =
+			{
+				0,1,2,3,4,5,6,9,14,24,29,54,104,129,204,254,504,629,1004,1254,2004,2504,3129,5004,6254,10004,12504,15629,20004,25004,31254,50004,62504,78129,100004,125004,156254
+			};
+			break;
 		case PICO6000A:
 			//PicoScope 6428E-D
 			if(g_model[3] == '8')
@@ -879,26 +945,20 @@ vector<size_t> PicoSCPIServer::GetSampleRates()
 		int32_t intervalNs_int;
 		uint64_t maxSamples;
 		int32_t maxSamples_int;
+		uint32_t maxSamples_uint;
 		PICO_STATUS status = PICO_RESERVED_1;
 
 		switch(g_pico_type)
 		{
 			case PICO2000:
-				//TODO
-				break;
-			case PICO3000:
-				//TODO
-				break;
-			case PICO4000:
-				//TODO
-				break;
-			case PICO5000:
-				status = ps5000GetTimebase(g_hScope, i, 1, &intervalNs_int, 1, &maxSamples_int, 0);
+				status = ps2000_get_timebase(g_hScope, i, 1, &intervalNs_int, 0, 0, &maxSamples_int);
 				maxSamples = maxSamples_int;
 				intervalNs = intervalNs_int;
 				break;
-			case PICO6000:
-				//TODO
+			case PICO3000:
+				status = ps3000_get_timebase(g_hScope, i, 1, &intervalNs_int, 0, 0, &maxSamples_int);
+				maxSamples = maxSamples_int;
+				intervalNs = intervalNs_int;
 				break;
 			case PICO2000A:
 				status = ps2000aGetTimebase2(g_hScope, i, 1, &intervalNs_f, 1, &maxSamples_int, 0);
@@ -910,14 +970,29 @@ vector<size_t> PicoSCPIServer::GetSampleRates()
 				maxSamples = maxSamples_int;
 				intervalNs = intervalNs_f;
 				break;
+			case PICO4000:
+				status = ps4000GetTimebase2(g_hScope, i, 1, &intervalNs_f, 1, &maxSamples_int, 0);
+				maxSamples = maxSamples_int;
+				intervalNs = intervalNs_f;
+				break;
 			case PICO4000A:
 				status = ps4000aGetTimebase2(g_hScope, i, 1, &intervalNs_f, &maxSamples_int, 0);
 				maxSamples = maxSamples_int;
 				intervalNs = intervalNs_f;
 				break;
+			case PICO5000:
+				status = ps5000GetTimebase(g_hScope, i, 1, &intervalNs_int, 1, &maxSamples_int, 0);
+				maxSamples = maxSamples_int;
+				intervalNs = intervalNs_int;
+				break;
 			case PICO5000A:
 				status = ps5000aGetTimebase2(g_hScope, i, 1, &intervalNs_f, &maxSamples_int, 0);
 				maxSamples = maxSamples_int;
+				intervalNs = intervalNs_f;
+				break;
+			case PICO6000:
+				status = ps6000GetTimebase2(g_hScope, i, 1, &intervalNs_f, 1, &maxSamples_uint, 0);
+				maxSamples = maxSamples_uint;
 				intervalNs = intervalNs_f;
 				break;
 			case PICO6000A:
@@ -962,7 +1037,7 @@ vector<size_t> PicoSCPIServer::GetSampleDepths()
 	int32_t intervalNs_int;
 	uint64_t maxSamples;
 	int32_t maxSamples_int;
-	//uint32_t maxSamples_uint;
+	uint32_t maxSamples_uint;
 
 	PICO_STATUS status;
 	status = PICO_RESERVED_1;
@@ -973,10 +1048,14 @@ vector<size_t> PicoSCPIServer::GetSampleDepths()
 	switch(g_pico_type)
 	{
 		case PICO2000:
-			//TODO
+			status = ps2000_get_timebase(g_hScope, ntimebase, 1, &intervalNs_int, 0, 0, &maxSamples_int);
+			maxSamples = maxSamples_int;
+			intervalNs = intervalNs_int;
 			break;
 		case PICO3000:
-			//TODO
+			status = ps3000_get_timebase(g_hScope, ntimebase, 1, &intervalNs_int, 0, 0, &maxSamples_int);
+			maxSamples = maxSamples_int;
+			intervalNs = intervalNs_int;
 			break;
 		case PICO2000A:
 			status = ps2000aGetTimebase2(g_hScope, ntimebase, 1, &intervalNs_f, 1, &maxSamples_int, 0);
@@ -989,9 +1068,9 @@ vector<size_t> PicoSCPIServer::GetSampleDepths()
 			intervalNs = intervalNs_f;
 			break;
 		case PICO4000:
-			//status = ps4000GetTimebase2(g_hScope, ntimebase, 1, &intervalNs_f, 1, &maxSamples_int, 0);
-			//maxSamples = maxSamples_int;
-			//intervalNs = intervalNs_f;
+			status = ps4000GetTimebase2(g_hScope, ntimebase, 1, &intervalNs_f, 1, &maxSamples_int, 0);
+			maxSamples = maxSamples_int;
+			intervalNs = intervalNs_f;
 			break;
 		case PICO4000A:
 			status = ps4000aGetTimebase2(g_hScope, ntimebase, 1, &intervalNs_f, &maxSamples_int, 0);
@@ -1009,9 +1088,9 @@ vector<size_t> PicoSCPIServer::GetSampleDepths()
 			intervalNs = intervalNs_f;
 			break;
 		case PICO6000:
-			//status = ps6000GetTimebase2(g_hScope, ntimebase, 1, &intervalNs_f, 1, &maxSamples_uint, 0);
-			//maxSamples = maxSamples_uint;
-			//intervalNs = intervalNs_f;
+			status = ps6000GetTimebase2(g_hScope, ntimebase, 1, &intervalNs_f, 1, &maxSamples_uint, 0);
+			maxSamples = maxSamples_uint;
+			intervalNs = intervalNs_f;
 			break;
 		case PICO6000A:
 			status = ps6000aGetTimebase(g_hScope, ntimebase, 1, &intervalNs, &maxSamples, 0);
@@ -1028,7 +1107,7 @@ vector<size_t> PicoSCPIServer::GetSampleDepths()
 
 		for(size_t base = 1000; base < maxSamples; base *= 10)
 		{
-			const size_t muls[] = {1, 2, 5};
+			const size_t muls[] = {1, 2, 4, 5, 8};
 			for(auto m : muls)
 			{
 				size_t depth = m * base;
@@ -1078,20 +1157,33 @@ bool PicoSCPIServer::OnCommand(
 			float freq_f = g_awgFreq;
 			float inc_f = 0;
 			float dwell_f = 0;
+			int32_t freq_l = g_awgFreq;
+			int16_t dwell_i = 0;
 			uint32_t status = PICO_OK;
 			switch(g_pico_type)
 			{
 				case PICO2000:
-					//TODO
-					break;
-				case PICO3000:
-					//TODO
-					break;
-				case PICO4000:
-					//TODO
-					break;
-				case PICO6000:
-					//TODO
+					tempRange = g_awgRange;
+					tempOffset = g_awgOffset;
+					g_awgRange = 0;
+					g_awgOffset = 0;
+					ReconfigAWG();
+					status = ps2000_set_sig_gen_built_in(
+								  g_hScope,
+								  tempOffset*1e6,
+								  tempRange*1e6*2,
+								  g_awgPS2000WaveType,
+								  freq_f,
+								  freq_f,
+								  0,
+								  0,
+								  PS2000_UP,          // sweepType
+								  0);
+					if(status != PICO_OK)
+						LogError("ps2000_set_sig_gen_built_in failed, code 0x%x \n", status);
+					g_awgRange = tempRange;
+					g_awgOffset = tempOffset;
+					g_awgOn = false;
 					break;
 				case PICO2000A:
 					tempRange = g_awgRange;
@@ -1118,6 +1210,27 @@ bool PicoSCPIServer::OnCommand(
 					g_awgOffset = tempOffset;
 					g_awgOn = false;
 					break;
+				case PICO3000:
+					tempRange = g_awgRange;
+					tempOffset = g_awgOffset;
+					g_awgRange = 0;
+					g_awgOffset = 0;
+					ReconfigAWG();
+					status = ps3000_set_siggen(
+									  g_hScope,
+									  g_awgPS3000WaveType,
+									  freq_l,
+									  freq_l,
+									  inc_f,
+									  dwell_i,
+									  1,
+									  0);
+					if(status != PICO_OK)
+						LogError("ps3000_set_siggen failed, code 0x%x \n", status);
+					g_awgRange = tempRange;
+					g_awgOffset = tempOffset;
+					g_awgOn = false;
+					break;
 				case PICO3000A:
 					tempRange = g_awgRange;
 					tempOffset = g_awgOffset;
@@ -1139,6 +1252,34 @@ bool PicoSCPIServer::OnCommand(
 								  );
 					if(status != PICO_OK)
 						LogError("ps3000aSetSigGenPropertiesBuiltIn failed, code 0x%x \n", status);
+					g_awgRange = tempRange;
+					g_awgOffset = tempOffset;
+					g_awgOn = false;
+					break;
+				case PICO4000:
+					tempRange = g_awgRange;
+					tempOffset = g_awgOffset;
+					g_awgRange = 0;
+					g_awgOffset = 0;
+					ReconfigAWG();
+					status = ps4000SetSigGenBuiltIn(
+									  g_hScope,
+									  tempOffset*1e6,
+									  tempRange *1e6*2,
+									  g_awgPS4000WaveType,
+									  freq_f,
+									  freq_f,
+									  inc_f,
+									  dwell_f,
+									  PS4000_UP,
+									  g_awgPS4000Operation,
+									  1,
+									  0,
+									  PS4000_SIGGEN_RISING,
+									  PS4000_SIGGEN_NONE,
+									  0);
+					if(PICO_OK != status)
+						LogError("ps4000SetSigGenBuiltIn failed, code 0x%x\n", status);
 					g_awgRange = tempRange;
 					g_awgOffset = tempOffset;
 					g_awgOn = false;
@@ -1183,12 +1324,12 @@ bool PicoSCPIServer::OnCommand(
 									  freq_f,
 									  inc_f,
 									  dwell_f,
-									  UP,
+									  PS5000_UP,
 									  g_awgPS5000Operation,
 									  1,
 									  0,
-									  SIGGEN_RISING,
-									  SIGGEN_NONE,
+									  PS5000_SIGGEN_RISING,
+									  PS5000_SIGGEN_NONE,
 									  0);
 					if(PICO_OK != status)
 						LogError("ps5000SetSigGenBuiltIn failed, code 0x%x\n", status);
@@ -1217,6 +1358,35 @@ bool PicoSCPIServer::OnCommand(
 								  );
 					if(status != PICO_OK)
 						LogError("ps5000aSetSigGenPropertiesBuiltIn failed, code 0x%x \n", status);
+					g_awgRange = tempRange;
+					g_awgOffset = tempOffset;
+					g_awgOn = false;
+					break;
+				case PICO6000:
+					tempRange = g_awgRange;
+					tempOffset = g_awgOffset;
+					g_awgRange = 0;
+					g_awgOffset = 0;
+					ReconfigAWG();
+					status = ps6000SetSigGenBuiltIn(
+									  g_hScope,
+									  tempOffset*1e6,
+									  tempRange *1e6*2,
+									  PS6000_WAVE_TYPE(g_awgPS6000WaveType),
+									  g_awgFreq,
+									  g_awgFreq,
+									  0,
+									  0,
+									  PS6000_UP,
+									  g_awgPS6000Operation,
+									  1,
+									  0,
+									  PS6000_SIGGEN_RISING,
+									  PS6000_SIGGEN_SOFT_TRIG,
+									  0
+								  );
+					if(status != PICO_OK)
+						LogError("ps6000SetSigGenBuiltIn failed, code 0x%x \n", status);
 					g_awgRange = tempRange;
 					g_awgOffset = tempOffset;
 					g_awgOn = false;
@@ -1298,57 +1468,43 @@ bool PicoSCPIServer::OnCommand(
 
 				switch(g_pico_type)
 				{
+					/* DutyCycle of square wave can not be controlled in most built in generators,
+					Must be implemented via Arbitrary*/
 					case PICO2000:
-						//TODO
-						break;
-					case PICO3000:
-						//TODO
-						break;
-					case PICO4000:
-						//TODO
-						break;
-					case PICO6000:
-						//TODO
+						if( g_awgPS2000WaveType == PS2000_SQUARE )
+							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, (double) duty);
 						break;
 					case PICO2000A:
-						/* DutyCycle of square wave can not be controlled in ps2000a built in generator,
-						Must be implemented via Arbitrary*/
 						if( g_awgPS2000AWaveType == PS2000A_SQUARE )
 							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, (double) duty);
-						else
-							LogError("PICO2000A DUTY TODO code\n");
+						break;
+					case PICO3000:
+						if( g_awgPS3000WaveType == PS3000_SQUARE )
+							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, (double) duty);
 						break;
 					case PICO3000A:
-						/* DutyCycle of square wave can not be controlled in ps3000a built in generator,
-						Must be implemented via Arbitrary*/
 						if( g_awgPS3000AWaveType == PS3000A_SQUARE )
 							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, (double) duty);
-						else
-							LogError("PICO3000A DUTY TODO code\n");
+						break;
+					case PICO4000:
+						if( g_awgPS4000WaveType == PS4000_SQUARE )
+							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, (double) duty);
 						break;
 					case PICO4000A:
-						/* DutyCycle of square wave can not be controlled in ps4000a built in generator,
-						Must be implemented via Arbitrary*/
 						if( g_awgPS4000AWaveType == PS4000A_SQUARE )
 							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, (double) duty);
-						else
-							LogError("PICO4000A DUTY TODO code\n");
 						break;
 					case PICO5000:
-						/* DutyCycle of square wave can not be controlled in ps5000 built in generator,
-						Must be implemented via Arbitrary*/
 						if( g_awgPS5000WaveType == PS5000_SQUARE )
 							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, (double) duty);
-						else
-							LogError("PICO5000 DUTY TODO code\n");
 						break;
 					case PICO5000A:
-						/* DutyCycle of square wave can not be controlled in ps3000a built in generator,
-						Must be implemented via Arbitrary*/
 						if( g_awgPS5000AWaveType == PS5000A_SQUARE )
 							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, (double) duty);
-						else
-							LogError("PICO5000A DUTY TODO code\n");
+						break;
+					case PICO6000:
+						if( g_awgPS6000WaveType == PS6000_SQUARE )
+							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, (double) duty);
 						break;
 					case PICO6000A:
 						status = ps6000aSigGenWaveformDutyCycle(g_hScope, duty);
@@ -1396,7 +1552,7 @@ bool PicoSCPIServer::OnCommand(
 				switch(g_pico_type)
 				{
 					case PICO2000:
-						/*if( (args[0] == "WHITENOISE") || (args[0] == "PRBS") )
+						if( (args[0] == "WHITENOISE") || (args[0] == "PRBS") )
 						{
 							LogError("Noise/PRBS generation not supported by 2000 series\n");
 							return true;
@@ -1406,12 +1562,12 @@ bool PicoSCPIServer::OnCommand(
 							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, 50);
 						}
 						g_awgPS2000WaveType = waveform->second.type2000;
-						g_awgPS2000Operation = waveform->second.op2000;
+						//g_awgPS2000Operation = waveform->second.op2000;
 						if(args[0] == "ARBITRARY")
 						{
 							//TODO: find a more flexible way to specify arb buffer
 							LogError("PICO2000 ARBITRARY TODO code\n");
-						}*/
+						}
 						break;
 					case PICO2000A:
 						if( (args[0] == "PRBS") && (g_model == "2205MSO") )
@@ -1432,8 +1588,22 @@ bool PicoSCPIServer::OnCommand(
 						}
 						break;
 					case PICO3000:
-						LogError("No Function generator on 3000 series\n");
-						return true;
+						if( (args[0] == "WHITENOISE") || (args[0] == "PRBS") )
+						{
+							LogError("Noise/PRBS generation not supported by 2000 series\n");
+							return true;
+						}
+						if( (g_awgPS3000WaveType == PS3000_SQUARE) )
+						{
+							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, 50);
+						}
+						g_awgPS3000WaveType = waveform->second.type3000;
+						//g_awgPS3000Operation = waveform->second.op3000;
+						if(args[0] == "ARBITRARY")
+						{
+							//TODO: find a more flexible way to specify arb buffer
+							LogError("PICO3000 ARBITRARY TODO code\n");
+						}
 						break;
 					case PICO3000A:
 						if( ( (args[0] == "WHITENOISE") || (args[0] == "PRBS") || (args[0] == "ARBITRARY") )
@@ -1462,7 +1632,7 @@ bool PicoSCPIServer::OnCommand(
 						}
 						break;
 					case PICO4000:
-						/*if( (args[0] == "PRBS")	&& (g_model[2] == '2') )
+						if( (args[0] == "PRBS")	&& (g_model[2] == '2') )
 						{
 							LogError("PRBS generation not supported by 422x models\n");
 							return true;
@@ -1472,12 +1642,12 @@ bool PicoSCPIServer::OnCommand(
 							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, 50);
 						}
 						g_awgPS4000WaveType = waveform->second.type4000;
-						g_awgPS4000Operation = waveform->second.op4000;
+						//g_awgPS4000Operation = waveform->second.op4000;
 						if(args[0] == "ARBITRARY")
 						{
 							//TODO: find a more flexible way to specify arb buffer
 							LogError("PICO4000 ARBITRARY TODO code\n");
-						}*/
+						}
 						break;
 					case PICO4000A:
 						if( (g_awgPS4000AWaveType == PS4000A_SQUARE) )
@@ -1541,7 +1711,7 @@ bool PicoSCPIServer::OnCommand(
 						}
 						break;
 					case PICO6000:
-						/*if( ( (args[0] == "WHITENOISE") || (args[0] == "PRBS") || (args[0] == "ARBITRARY") )
+						if( ( (args[0] == "WHITENOISE") || (args[0] == "PRBS") || (args[0] == "ARBITRARY") )
 								&& ( (g_model[4] == 'A') || (g_model[4] == 'C') ) )
 						{
 							LogError("AWG and Noise/PRBS generation not supported by 6xxxA/C Models\n");
@@ -1555,19 +1725,19 @@ bool PicoSCPIServer::OnCommand(
 							LogError("Ramp/Sinc/Gauss/Half-Sine generation not supported by 6xxxA/C Models\n");
 							return true;
 						}
-						if( (g_awgPS6000WaveType == PS6000A_SQUARE) )
+						if( (g_awgPS6000WaveType == PS6000_SQUARE) )
 						{
 							GenerateSquareWave(g_arbitraryWaveform, g_awgBufferSize, 50);
 						}
-						g_awgPS6000AWaveType = waveform->second.type6000;
-						g_awgPS6000AOperation = waveform->second.op6000;
+						g_awgPS6000WaveType = waveform->second.type6000;
+						g_awgPS6000Operation = waveform->second.op6000;
 
 
 						if(args[0] == "ARBITRARY")
 						{
 							//TODO: find a more flexible way to specify arb buffer
 							LogError("PICO6000 ARBITRARY TODO code\n");
-						}*/
+						}
 						break;
 					case PICO6000A:
 						status = ps6000aSigGenWaveform(g_hScope, waveform->second.type6000A, NULL, 0);
@@ -1828,7 +1998,7 @@ bool PicoSCPIServer::OnCommand(
 	else if( (cmd == "RANGE") )
 	{
 		//This will be called when digital channels are on the same View with analog channels and voltage range is changed.
-		//Just do nothing here to avoid spamming the debug log with Unrecognized command received.
+		//Just do nothing here to avoid spamming the debug log with "Unrecognized command received".
 		return false;
 	}
 
@@ -1867,10 +2037,10 @@ void PicoSCPIServer::SetChannelBandwidthLimiter(size_t chan, unsigned int limit_
 				g_bandwidth_3000a[chan] = PS3000A_BW_FULL;
 			break;
 		case PICO4000:
-			/*if(limit_mhz == 1)	//workaround: use 1MHz for 200kHz filter (applicable to 4262)
+			if(limit_mhz == 1)	//workaround: use 1MHz for 200kHz filter (applicable to 4262)
 				g_bandwidth_4000[chan] = 1;
 			else
-				g_bandwidth_4000[chan] = 0;*/
+				g_bandwidth_4000[chan] = 0;
 			break;
 		case PICO4000A:
 			if(limit_mhz == 1)
@@ -1890,12 +2060,12 @@ void PicoSCPIServer::SetChannelBandwidthLimiter(size_t chan, unsigned int limit_
 				g_bandwidth_5000a[chan] = PS5000A_BW_FULL;
 			break;
 		case PICO6000:
-			/*if(limit_mhz == 20)
+			if(limit_mhz == 20)
 				g_bandwidth_6000[chan] = PS6000_BW_20MHZ;
 			else if(limit_mhz == 25)
 				g_bandwidth_6000[chan] = PS6000_BW_25MHZ;
 			if(limit_mhz == 20)
-				g_bandwidth_6000[chan] = PS6000_BW_FULL;*/
+				g_bandwidth_6000[chan] = PS6000_BW_FULL;
 			break;
 		case PICO6000A:
 			if(limit_mhz == 20)
@@ -1937,8 +2107,8 @@ void PicoSCPIServer::ReconfigAWG()
 	float freq_f = g_awgFreq;
 	float inc_f = 0;
 	float dwell_f = 0;
-	//int32_t freq_l = g_awgFreq;
-	//int16_t dwell_i = 0;
+	int32_t freq_l = g_awgFreq;
+	int16_t dwell_i = 0;
 	float tempRange = g_awgRange;
 	float tempOffset = g_awgOffset;
 	uint32_t status = PICO_OK;
@@ -1951,48 +2121,25 @@ void PicoSCPIServer::ReconfigAWG()
 	switch(g_pico_type)
 	{
 		case PICO2000:
-			/*//TODO
 			Stop(); // Need to stop acquisition when setting the AWG to avoid "PICO_BUSY" errors
-			// delta?
-			if(g_awgPS3000WaveType == PS3000_SQUARE || g_awgPS3000WaveType == PS3000_TRIANGLE || g_awgPS3000WaveType == PS3000_SINE)
+			//if(g_awgPS2000WaveType == PS2000_SQUARE || g_awgPS2000WaveType == PS2000_TRIANGLE || g_awgPS2000WaveType == PS2000_SINE)
 			{
 				status = ps2000_set_sig_gen_built_in(
 							  g_hScope,
 							  tempOffset*1e6,
 							  tempRange*1e6*2,
-							  delta,
-							  delta,
+							  g_awgPS2000WaveType,
+							  freq_f,
+							  freq_f,
 							  0,
 							  0,
-							  g_arbitraryWaveform,
-							  g_awgBufferSize,
-							  UP,          // sweepType
+							  PS2000_UP,          // sweepType
 							  0);
 				if(PICO_OK != status)
 					LogError("ps2000_set_sig_gen_built_in failed, code 0x%x\n", status);
 			}
 			if(g_triggerArmed)
-				StartCapture(false);*/
-			break;
-		case PICO3000:
-			/*//TODO
-			Stop(); // Need to stop acquisition when setting the AWG to avoid "PICO_BUSY" errors
-			if(g_awgPS3000WaveType == PS3000_SQUARE || g_awgPS3000WaveType == PS3000_TRIANGLE || g_awgPS3000WaveType == PS3000_SINE)
-			{
-				status = ps3000_set_siggen(
-								  g_hScope,
-								  g_awgPS3000WaveType,
-								  freq_l,
-								  freq_l,
-								  inc_f,
-								  dwell_i,
-								  1,
-								  0);
-				if(PICO_OK != status)
-					LogError("ps3000_set_siggen failed, code 0x%x\n", status);
-			}
-			if(g_triggerArmed)
-				StartCapture(false);*/
+				StartCapture(false);
 			break;
 		case PICO2000A:
 			Stop(); // Need to stop acquisition when setting the AWG to avoid "PICO_BUSY" errors
@@ -2043,6 +2190,26 @@ void PicoSCPIServer::ReconfigAWG()
 								  0);                         // Tigger level (-32767 to 32767 -> -5 to 5 V)
 				if(PICO_OK != status)
 					LogError("ps2000aSetSigGenBuiltInV2 failed, code 0x%x\n", status);
+			}
+			if(g_triggerArmed)
+				StartCapture(false);
+			break;
+		case PICO3000:
+			//TODO
+			Stop(); // Need to stop acquisition when setting the AWG to avoid "PICO_BUSY" errors
+			if(g_awgPS3000WaveType == PS3000_SQUARE || g_awgPS3000WaveType == PS3000_TRIANGLE || g_awgPS3000WaveType == PS3000_SINE)
+			{
+				status = ps3000_set_siggen(
+								  g_hScope,
+								  g_awgPS3000WaveType,
+								  freq_l,
+								  freq_l,
+								  inc_f,
+								  dwell_i,
+								  1,
+								  0);
+				if(PICO_OK != status)
+					LogError("ps3000_set_siggen failed, code 0x%x\n", status);
 			}
 			if(g_triggerArmed)
 				StartCapture(false);
@@ -2101,12 +2268,11 @@ void PicoSCPIServer::ReconfigAWG()
 				StartCapture(false);
 			break;
 		case PICO4000:
-			/*Stop(); // Need to stop acquisition when setting the AWG to avoid "PICO_BUSY" errors
-			// delta?
-			if(g_awgPS4000WaveType == PS4000_SQUARE || g_awgPS4000WaveType == WAVE_TYPE)
+			Stop(); // Need to stop acquisition when setting the AWG to avoid "PICO_BUSY" errors
+			if(g_awgPS4000WaveType == PS4000_SQUARE || g_awgPS4000WaveType == PS4000_MAX_WAVE_TYPES)
 			{
 				uint32_t delta= 0;
-				status = ps4000SigGenFrequencyToPhase(g_hScope, g_awgFreq, INDEX_MODE(SINGLE), g_awgBufferSize, &delta);
+				status = ps4000SigGenFrequencyToPhase(g_hScope, g_awgFreq, PS4000_INDEX_MODE(PS4000_SINGLE), g_awgBufferSize, &delta);
 				if(status != PICO_OK)
 					LogError("ps4000SigGenFrequencyToPhase failed, code 0x%x\n", status);
 				status =  ps4000SetSigGenArbitrary(
@@ -2119,13 +2285,13 @@ void PicoSCPIServer::ReconfigAWG()
 							  0,
 							  g_arbitraryWaveform,
 							  g_awgBufferSize,
-							  UP,          // sweepType
+							  PS4000_UP,          // sweepType
 							  0,      // operation
-							  SINGLE,      // indexMode
+							  PS4000_SINGLE,      // indexMode
 							  0,
 							  0,
-							  SIGGEN_RISING,
-							  SIGGEN_NONE,
+							  PS4000_SIGGEN_RISING,
+							  PS4000_SIGGEN_NONE,
 							  0);
 				if(status != PICO_OK)
 					LogError("ps4000SetSigGenArbitrary failed, code 0x%x\n", status);
@@ -2136,23 +2302,23 @@ void PicoSCPIServer::ReconfigAWG()
 								  g_hScope,
 								  tempOffset*1e6,        //Offset Voltage in µV
 								  tempRange *1e6*2,      // Peak to Peak Range in µV
-								  g_awgPS5000WaveType,
+								  g_awgPS4000WaveType,
 								  freq_f,
 								  freq_f,
 								  inc_f,
 								  dwell_f,
-								  UP,
+								  PS4000_UP,
 								  g_awgPS4000Operation,
 								  0,  //run forever
 								  0,  //dont use sweeps
-								  SIGGEN_RISING,
-								  SIGGEN_NONE,
+								  PS4000_SIGGEN_RISING,
+								  PS4000_SIGGEN_NONE,
 								  0);                         // Tigger level (-32767 to 32767 -> -5 to 5 V)
 				if(PICO_OK != status)
 					LogError("ps4000SetSigGenBuiltIn failed, code 0x%x\n", status);
 			}
 			if(g_triggerArmed)
-				StartCapture(false);*/
+				StartCapture(false);
 			break;
 		case PICO4000A:
 			Stop(); // Need to stop acquisition when setting the AWG to avoid "PICO_BUSY" errors
@@ -2209,7 +2375,7 @@ void PicoSCPIServer::ReconfigAWG()
 			break;
 		case PICO5000:
 			Stop(); // Need to stop acquisition when setting the AWG to avoid "PICO_BUSY" errors
-			if(g_awgPS5000WaveType == PS5000_SQUARE || g_awgPS5000WaveType == MAX_WAVE_TYPES)
+			if(g_awgPS5000WaveType == PS5000_SQUARE || g_awgPS5000WaveType == PS5000_MAX_WAVE_TYPES)
 			{
 				uint32_t delta= 0;
 				//TODO The generator steps through the waveform by adding a "delta phase" between 1 and 2^32-1 to the phase counter every 8 ns.
@@ -2226,13 +2392,13 @@ void PicoSCPIServer::ReconfigAWG()
 							  0,
 							  g_arbitraryWaveform,
 							  g_awgBufferSize,
-							  UP,          // sweepType
+							  PS5000_UP,          // sweepType
 							  0,      // operation
-							  SINGLE,      // indexMode
+							  PS5000_SINGLE,      // indexMode
 							  0,
 							  0,
-							  SIGGEN_RISING,
-							  SIGGEN_NONE,
+							  PS5000_SIGGEN_RISING,
+							  PS5000_SIGGEN_NONE,
 							  0);
 				if(status != PICO_OK)
 					LogError("ps5000SetSigGenArbitrary failed, code 0x%x\n", status);
@@ -2248,12 +2414,12 @@ void PicoSCPIServer::ReconfigAWG()
 								  freq_f,
 								  inc_f,
 								  dwell_f,
-								  UP,
+								  PS5000_UP,
 								  g_awgPS5000Operation,
 								  0,  //run forever
 								  0,  //dont use sweeps
-								  SIGGEN_RISING,
-								  SIGGEN_NONE,
+								  PS5000_SIGGEN_RISING,
+								  PS5000_SIGGEN_NONE,
 								  0);                         // Tigger level (-32767 to 32767 -> -5 to 5 V)
 				if(PICO_OK != status)
 					LogError("ps5000SetSigGenBuiltIn failed, code 0x%x\n", status);
@@ -2315,7 +2481,7 @@ void PicoSCPIServer::ReconfigAWG()
 				StartCapture(false);
 			break;
 		case PICO6000:
-			/*Stop(); // Need to stop acquisition when setting the AWG to avoid "PICO_BUSY" errors
+			Stop(); // Need to stop acquisition when setting the AWG to avoid "PICO_BUSY" errors
 			if(g_awgPS6000WaveType == PS6000_SQUARE || g_awgPS6000WaveType == PS6000_MAX_WAVE_TYPES)
 			{
 				uint32_t delta= 0;
@@ -2365,7 +2531,7 @@ void PicoSCPIServer::ReconfigAWG()
 					LogError("ps6000SetSigGenBuiltInV2 failed, code 0x%x\n", status);
 			}
 			if(g_triggerArmed)
-				StartCapture(false);*/
+				StartCapture(false);
 			break;
 		case PICO6000A:
 			status = ps6000aSigGenRange(g_hScope, g_awgRange, g_awgOffset);
@@ -2695,52 +2861,53 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 	size_t channelId = chIndex & 0xff;
 	//range_V is peak-to-peak whereas the Pico modes are V-peak,
 	//i.e. PS5000_20V = +-20V = 40Vpp = 'range_V = 40'
+	range_V = range_V / 2;
 
 	switch(g_pico_type)
 	{
 		case PICO2000:
-			/*//Limited range for some models
+			//Limited range for some models
 			if(g_model[1] == '1')
 			{
 				range_V = max(range_V, 0.1);
 			}
 			//2000 series uses passive probes only, 50mV to 20V, no 50 ohm mode available
-			if(range_V > 20)
+			if(range_V > 10)
 			{
 				g_range_2000[channelId] = PS2000_20V;
 				g_roundedRange[channelId] = 20;
 			}
-			else if(range_V > 10)
+			else if(range_V > 5)
 			{
 				g_range_2000[channelId] = PS2000_10V;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range_V > 5)
+			else if(range_V > 2)
 			{
 				g_range_2000[channelId] = PS2000_5V;
 				g_roundedRange[channelId] = 5;
 			}
-			else if(range_V > 2)
+			else if(range_V > 1)
 			{
 				g_range_2000[channelId] = PS2000_2V;
 				g_roundedRange[channelId] = 2;
 			}
-			else if(range_V > 1)
+			else if(range_V > 0.5)
 			{
 				g_range_2000[channelId] = PS2000_1V;
 				g_roundedRange[channelId] = 1;
 			}
-			else if(range_V > 0.5)
+			else if(range_V > 0.2)
 			{
 				g_range_2000[channelId] = PS2000_500MV;
 				g_roundedRange[channelId] = 0.5;
 			}
-			else if(range_V > 0.2)
+			else if(range_V > 0.1)
 			{
 				g_range_2000[channelId] = PS2000_200MV;
 				g_roundedRange[channelId] = 0.2;
 			}
-			else if(range_V > 0.1)
+			else if(range_V > 0.05)
 			{
 				g_range_2000[channelId] = PS2000_100MV;
 				g_roundedRange[channelId] = 0.1;
@@ -2749,7 +2916,7 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 			{
 				g_range_2000[channelId] = PS2000_50MV;
 				g_roundedRange[channelId] = 0.05;
-			}*/
+			}
 			break;
 		case PICO2000A:
 			//Limited range for some models
@@ -2761,47 +2928,47 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 				range_V = max(range_V, 0.05);
 			}
 			//2000 series uses passive probes only, 20mV to 20V, no 50 ohm mode available
-			if(range_V > 20)
+			if(range_V > 10)
 			{
 				g_range_2000a[channelId] = PS2000A_20V;
 				g_roundedRange[channelId] = 20;
 			}
-			else if(range_V > 10)
+			else if(range_V > 5)
 			{
 				g_range_2000a[channelId] = PS2000A_10V;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range_V > 5)
+			else if(range_V > 2)
 			{
 				g_range_2000a[channelId] = PS2000A_5V;
 				g_roundedRange[channelId] = 5;
 			}
-			else if(range_V > 2)
+			else if(range_V > 1)
 			{
 				g_range_2000a[channelId] = PS2000A_2V;
 				g_roundedRange[channelId] = 2;
 			}
-			else if(range_V > 1)
+			else if(range_V > 0.5)
 			{
 				g_range_2000a[channelId] = PS2000A_1V;
 				g_roundedRange[channelId] = 1;
 			}
-			else if(range_V > 0.5)
+			else if(range_V > 0.2)
 			{
 				g_range_2000a[channelId] = PS2000A_500MV;
 				g_roundedRange[channelId] = 0.5;
 			}
-			else if(range_V > 0.2)
+			else if(range_V > 0.1)
 			{
 				g_range_2000a[channelId] = PS2000A_200MV;
 				g_roundedRange[channelId] = 0.2;
 			}
-			else if(range_V > 0.1)
+			else if(range_V > 0.05)
 			{
 				g_range_2000a[channelId] = PS2000A_100MV;
 				g_roundedRange[channelId] = 0.1;
 			}
-			else if(range_V > 0.05)
+			else if(range_V > 0.02)
 			{
 				g_range_2000a[channelId] = PS2000A_50MV;
 				g_roundedRange[channelId] = 0.05;
@@ -2813,54 +2980,54 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 			}
 			break;
 		case PICO3000:
-			/*//Limited range for some models
+			//Limited range for some models
 			if(g_model[2] == '0')
 			{
 				range_V = min(range_V, 10.0);
 				range_V = max(range_V, 0.05);
 			}
 			//3000 series uses passive probes only, 20mV to 20V, no 50 ohm mode available
-			if(range_V > 20)
+			if(range_V > 10)
 			{
 				g_range_3000[channelId] = PS3000_20V;
 				g_roundedRange[channelId] = 20;
 			}
-			else if(range_V > 10)
+			else if(range_V > 5)
 			{
 				g_range_3000[channelId] = PS3000_10V;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range_V > 5)
+			else if(range_V > 2)
 			{
 				g_range_3000[channelId] = PS3000_5V;
 				g_roundedRange[channelId] = 5;
 			}
-			else if(range_V > 2)
+			else if(range_V > 1)
 			{
 				g_range_3000[channelId] = PS3000_2V;
 				g_roundedRange[channelId] = 2;
 			}
-			else if(range_V > 1)
+			else if(range_V > 0.5)
 			{
 				g_range_3000[channelId] = PS3000_1V;
 				g_roundedRange[channelId] = 1;
 			}
-			else if(range_V > 0.5)
+			else if(range_V > 0.2)
 			{
 				g_range_3000[channelId] = PS3000_500MV;
 				g_roundedRange[channelId] = 0.5;
 			}
-			else if(range_V > 0.2)
+			else if(range_V > 0.1)
 			{
 				g_range_3000[channelId] = PS3000_200MV;
 				g_roundedRange[channelId] = 0.2;
 			}
-			else if(range_V > 0.1)
+			else if(range_V > 0.05)
 			{
 				g_range_3000[channelId] = PS3000_100MV;
 				g_roundedRange[channelId] = 0.1;
 			}
-			else if(range_V > 0.05)
+			else if(range_V > 0.02)
 			{
 				g_range_3000[channelId] = PS3000_50MV;
 				g_roundedRange[channelId] = 0.05;
@@ -2869,7 +3036,7 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 			{
 				g_range_3000[channelId] = PS3000_20MV;
 				g_roundedRange[channelId] = 0.02;
-			}*/
+			}
 			break;
 		case PICO3000A:
 			//Limited range for some models
@@ -2878,47 +3045,47 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 				range_V = max(range_V, 0.05);
 			}
 			//3000D series uses passive probes only, 20mV to 20V, no 50 ohm mode available
-			if(range_V > 20)
+			if(range_V > 10)
 			{
 				g_range_3000a[channelId] = PS3000A_20V;
 				g_roundedRange[channelId] = 20;
 			}
-			else if(range_V > 10)
+			else if(range_V > 5)
 			{
 				g_range_3000a[channelId] = PS3000A_10V;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range_V > 5)
+			else if(range_V > 2)
 			{
 				g_range_3000a[channelId] = PS3000A_5V;
 				g_roundedRange[channelId] = 5;
 			}
-			else if(range_V > 2)
+			else if(range_V > 1)
 			{
 				g_range_3000a[channelId] = PS3000A_2V;
 				g_roundedRange[channelId] = 2;
 			}
-			else if(range_V > 1)
+			else if(range_V > 0.5)
 			{
 				g_range_3000a[channelId] = PS3000A_1V;
 				g_roundedRange[channelId] = 1;
 			}
-			else if(range_V > 0.5)
+			else if(range_V > 0.2)
 			{
 				g_range_3000a[channelId] = PS3000A_500MV;
 				g_roundedRange[channelId] = 0.5;
 			}
-			else if(range_V > 0.2)
+			else if(range_V > 0.1)
 			{
 				g_range_3000a[channelId] = PS3000A_200MV;
 				g_roundedRange[channelId] = 0.2;
 			}
-			else if(range_V > 0.1)
+			else if(range_V > 0.05)
 			{
 				g_range_3000a[channelId] = PS3000A_100MV;
 				g_roundedRange[channelId] = 0.1;
 			}
-			else if(range_V > 0.05)
+			else if(range_V > 0.02)
 			{
 				g_range_3000a[channelId] = PS3000A_50MV;
 				g_roundedRange[channelId] = 0.05;
@@ -2930,7 +3097,7 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 			}
 			break;
 		case PICO4000:
-			/*//Limited range for some models
+			//Limited range for some models
 			if(g_model[3] == '4')
 			{
 				range_V = max(range_V, 0.05);
@@ -2945,62 +3112,62 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 				range_V = max(range_V, 0.05);
 			}
 			//4000 series uses passive probes only, spans 10mV to 100V, no 50 ohm mode available
-			if(range_V > 100)
+			if(range_V > 50)
 			{
 				g_range_4000[channelId] = PS4000_100V;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range_V > 50)
+			else if(range_V > 20)
 			{
 				g_range_4000[channelId] = PS4000_50V;
 				g_roundedRange[channelId] = 50;
 			}
-			else if(range_V > 20)
+			else if(range_V > 10)
 			{
 				g_range_4000[channelId] = PS4000_20V;
 				g_roundedRange[channelId] = 20;
 			}
-			else if(range_V > 10)
+			else if(range_V > 5)
 			{
 				g_range_4000[channelId] = PS4000_10V;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range_V > 5)
+			else if(range_V > 2)
 			{
 				g_range_4000[channelId] = PS4000_5V;
 				g_roundedRange[channelId] = 5;
 			}
-			else if(range_V > 2)
+			else if(range_V > 1)
 			{
 				g_range_4000[channelId] = PS4000_2V;
 				g_roundedRange[channelId] = 2;
 			}
-			else if(range_V > 1)
+			else if(range_V > 0.5)
 			{
 				g_range_4000[channelId] = PS4000_1V;
 				g_roundedRange[channelId] = 1;
 			}
-			else if(range_V > 0.5)
+			else if(range_V > 0.2)
 			{
 				g_range_4000[channelId] = PS4000_500MV;
 				g_roundedRange[channelId] = 0.5;
 			}
-			else if(range_V > 0.2)
+			else if(range_V > 0.1)
 			{
 				g_range_4000[channelId] = PS4000_200MV;
 				g_roundedRange[channelId] = 0.2;
 			}
-			else if(range_V > 0.1)
+			else if(range_V > 0.05)
 			{
 				g_range_4000[channelId] = PS4000_100MV;
 				g_roundedRange[channelId] = 0.1;
 			}
-			else if(range_V > 0.05)
+			else if(range_V > 0.02)
 			{
 				g_range_4000[channelId] = PS4000_50MV;
 				g_roundedRange[channelId] = 0.05;
 			}
-			else if(range_V > 0.02)
+			else if(range_V > 0.01)
 			{
 				g_range_4000[channelId] = PS4000_20MV;
 				g_roundedRange[channelId] = 0.02;
@@ -3009,71 +3176,71 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 			{
 				g_range_4000[channelId] = PS4000_10MV;
 				g_roundedRange[channelId] = 0.01;
-			}*/
+			}
 			break;
 		case PICO4000A:
 			//4000 series uses passive probes only, 10mV to 50V, no 50 ohm mode available
-			if(range_V > 50)
+			if(range_V > 20)
 			{
 				g_range_4000a[channelId] = PS4000A_50V;
 				g_range[channelId] = PICO_X1_PROBE_50V;
 				g_roundedRange[channelId] = 50;
 			}
-			else if(range_V > 20)
+			else if(range_V > 10)
 			{
 				g_range_4000a[channelId] = PS4000A_20V;
 				g_range[channelId] = PICO_X1_PROBE_20V;
 				g_roundedRange[channelId] = 20;
 			}
-			else if(range_V > 10)
+			else if(range_V > 5)
 			{
 				g_range_4000a[channelId] = PS4000A_10V;
 				g_range[channelId] = PICO_X1_PROBE_10V;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range_V > 5)
+			else if(range_V > 2)
 			{
 				g_range_4000a[channelId] = PS4000A_5V;
 				g_range[channelId] = PICO_X1_PROBE_5V;
 				g_roundedRange[channelId] = 5;
 			}
-			else if(range_V > 2)
+			else if(range_V > 1)
 			{
 				g_range_4000a[channelId] = PS4000A_2V;
 				g_range[channelId] = PICO_X1_PROBE_2V;
 				g_roundedRange[channelId] = 2;
 			}
-			else if(range_V > 1)
+			else if(range_V > 0.5)
 			{
 				g_range_4000a[channelId] = PS4000A_1V;
 				g_range[channelId] = PICO_X1_PROBE_1V;
 				g_roundedRange[channelId] = 1;
 			}
-			else if(range_V > 0.5)
+			else if(range_V > 0.2)
 			{
 				g_range_4000a[channelId] = PS4000A_500MV;
 				g_range[channelId] = PICO_X1_PROBE_500MV;
 				g_roundedRange[channelId] = 0.5;
 			}
-			else if(range_V > 0.2)
+			else if(range_V > 0.1)
 			{
 				g_range_4000a[channelId] = PS4000A_200MV;
 				g_range[channelId] = PICO_X1_PROBE_200MV;
 				g_roundedRange[channelId] = 0.2;
 			}
-			else if(range_V > 0.1)
+			else if(range_V > 0.05)
 			{
 				g_range_4000a[channelId] = PS4000A_100MV;
 				g_range[channelId] = PICO_X1_PROBE_100MV;
 				g_roundedRange[channelId] = 0.1;
 			}
-			else if(range_V > 0.05)
+			else if(range_V > 0.02)
 			{
 				g_range_4000a[channelId] = PS4000A_50MV;
 				g_range[channelId] = PICO_X1_PROBE_50MV;
 				g_roundedRange[channelId] = 0.05;
 			}
-			else if(range_V > 0.02)
+			else if(range_V > 0.01)
 			{
 				g_range_4000a[channelId] = PS4000A_20MV;
 				g_range[channelId] = PICO_X1_PROBE_20MV;
@@ -3088,37 +3255,37 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 			break;
 		case PICO5000:
 			//5000 series uses passive probes only, 100mV to 20V, no 50 ohm mode available
-			if(range_V > 20)
+			if(range_V > 10)
 			{
 				g_range_5000[channelId] = PS5000_20V;
 				g_roundedRange[channelId] = 20;
 			}
-			else if(range_V > 10)
+			else if(range_V > 5)
 			{
 				g_range_5000[channelId] = PS5000_10V;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range_V > 5)
+			else if(range_V > 2)
 			{
 				g_range_5000[channelId] = PS5000_5V;
 				g_roundedRange[channelId] = 5;
 			}
-			else if(range_V > 2)
+			else if(range_V > 1)
 			{
 				g_range_5000[channelId] = PS5000_2V;
 				g_roundedRange[channelId] = 2;
 			}
-			else if(range_V > 1)
+			else if(range_V > 0.5)
 			{
 				g_range_5000[channelId] = PS5000_1V;
 				g_roundedRange[channelId] = 1;
 			}
-			else if(range_V > 0.5)
+			else if(range_V > 0.2)
 			{
 				g_range_5000[channelId] = PS5000_500MV;
 				g_roundedRange[channelId] = 0.5;
 			}
-			else if(range_V > 0.2)
+			else if(range_V > 0.1)
 			{
 				g_range_5000[channelId] = PS5000_200MV;
 				g_roundedRange[channelId] = 0.2;
@@ -3131,52 +3298,52 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 			break;
 		case PICO5000A:
 			//5000D series uses passive probes only, 10mV to 20V, no 50 ohm mode available
-			if(range_V > 20)
+			if(range_V > 10)
 			{
 				g_range_5000a[channelId] = PS5000A_20V;
 				g_roundedRange[channelId] = 20;
 			}
-			else if(range_V > 10)
+			else if(range_V > 5)
 			{
 				g_range_5000a[channelId] = PS5000A_10V;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range_V > 5)
+			else if(range_V > 2)
 			{
 				g_range_5000a[channelId] = PS5000A_5V;
 				g_roundedRange[channelId] = 5;
 			}
-			else if(range_V > 2)
+			else if(range_V > 1)
 			{
 				g_range_5000a[channelId] = PS5000A_2V;
 				g_roundedRange[channelId] = 2;
 			}
-			else if(range_V > 1)
+			else if(range_V > 0.5)
 			{
 				g_range_5000a[channelId] = PS5000A_1V;
 				g_roundedRange[channelId] = 1;
 			}
-			else if(range_V > 0.5)
+			else if(range_V > 0.2)
 			{
 				g_range_5000a[channelId] = PS5000A_500MV;
 				g_roundedRange[channelId] = 0.5;
 			}
-			else if(range_V > 0.2)
+			else if(range_V > 0.1)
 			{
 				g_range_5000a[channelId] = PS5000A_200MV;
 				g_roundedRange[channelId] = 0.2;
 			}
-			else if(range_V > 0.1)
+			else if(range_V > 0.05)
 			{
 				g_range_5000a[channelId] = PS5000A_100MV;
 				g_roundedRange[channelId] = 0.1;
 			}
-			else if(range_V > 0.05)
+			else if(range_V > 0.02)
 			{
 				g_range_5000a[channelId] = PS5000A_50MV;
 				g_roundedRange[channelId] = 0.05;
 			}
-			else if(range_V > 0.02)
+			else if(range_V > 0.01)
 			{
 				g_range_5000a[channelId] = PS5000A_20MV;
 				g_roundedRange[channelId] = 0.02;
@@ -3188,43 +3355,43 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 			}
 			break;
 		case PICO6000:
-			/*//6000 series uses passive probes only, 50mV to 20V, no 50 ohm mode available
-			if(range_V > 20)
+			//6000 series uses passive probes only, 50mV to 20V, no 50 ohm mode available
+			if(range_V > 10)
 			{
 				g_range_6000[channelId] = PS6000_20V;
 				g_roundedRange[channelId] = 20;
 			}
-			else if(range_V > 10)
+			else if(range_V > 5)
 			{
 				g_range_6000[channelId] = PS6000_10V;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range_V > 5)
+			else if(range_V > 2)
 			{
 				g_range_6000[channelId] = PS6000_5V;
 				g_roundedRange[channelId] = 5;
 			}
-			else if(range_V > 2)
+			else if(range_V > 1)
 			{
 				g_range_6000[channelId] = PS6000_2V;
 				g_roundedRange[channelId] = 2;
 			}
-			else if(range_V > 1)
+			else if(range_V > 0.5)
 			{
 				g_range_6000[channelId] = PS6000_1V;
 				g_roundedRange[channelId] = 1;
 			}
-			else if(range_V > 0.5)
+			else if(range_V > 0.2)
 			{
 				g_range_6000[channelId] = PS6000_500MV;
 				g_roundedRange[channelId] = 0.5;
 			}
-			else if(range_V > 0.2)
+			else if(range_V > 0.1)
 			{
 				g_range_6000[channelId] = PS6000_200MV;
 				g_roundedRange[channelId] = 0.2;
 			}
-			else if(range_V > 0.1)
+			else if(range_V > 0.05)
 			{
 				g_range_6000[channelId] = PS6000_100MV;
 				g_roundedRange[channelId] = 0.1;
@@ -3233,7 +3400,7 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 			{
 				g_range_6000[channelId] = PS6000_50MV;
 				g_roundedRange[channelId] = 0.05;
-			}*/
+			}
 			break;
 		case PICO6000A:
 			//6000E series can use intelligent probes.
@@ -3247,67 +3414,67 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 			if(g_coupling[channelId] == PICO_DC_50OHM)
 				range_V = min(range_V, 5.0);
 
-			if(range_V > 200)
+			if(range_V > 100)
 			{
 				g_range[channelId] = PICO_X1_PROBE_200V;
 				g_roundedRange[channelId] = 200;
 			}
-			else if(range_V > 100)
+			else if(range_V > 50)
 			{
 				g_range[channelId] = PICO_X1_PROBE_100V;
 				g_roundedRange[channelId] = 100;
 			}
-			else if(range_V > 50)
+			else if(range_V > 20)
 			{
 				g_range[channelId] = PICO_X1_PROBE_50V;
 				g_roundedRange[channelId] = 50;
 			}
-			else if(range_V > 20)
+			else if(range_V > 10)
 			{
 				g_range[channelId] = PICO_X1_PROBE_20V;
 				g_roundedRange[channelId] = 20;
 			}
-			else if(range_V > 10)
+			else if(range_V > 5)
 			{
 				g_range[channelId] = PICO_X1_PROBE_10V;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range_V > 5)
+			else if(range_V > 2)
 			{
 				g_range[channelId] = PICO_X1_PROBE_5V;
 				g_roundedRange[channelId] = 5;
 			}
-			else if(range_V > 2)
+			else if(range_V > 1)
 			{
 				g_range[channelId] = PICO_X1_PROBE_2V;
 				g_roundedRange[channelId] = 2;
 			}
-			else if(range_V > 1)
+			else if(range_V > 0.5)
 			{
 				g_range[channelId] = PICO_X1_PROBE_1V;
 				g_roundedRange[channelId] = 1;
 			}
-			else if(range_V > 0.5)
+			else if(range_V > 0.2)
 			{
 				g_range[channelId] = PICO_X1_PROBE_500MV;
 				g_roundedRange[channelId] = 0.5;
 			}
-			else if(range_V > 0.2)
+			else if(range_V > 0.1)
 			{
 				g_range[channelId] = PICO_X1_PROBE_200MV;
 				g_roundedRange[channelId] = 0.2;
 			}
-			else if(range_V > 0.1)
+			else if(range_V > 0.05)
 			{
 				g_range[channelId] = PICO_X1_PROBE_100MV;
 				g_roundedRange[channelId] = 0.1;
 			}
-			else if(range_V > 0.05)
+			else if(range_V > 0.02)
 			{
 				g_range[channelId] = PICO_X1_PROBE_50MV;
 				g_roundedRange[channelId] = 0.05;
 			}
-			else if(range_V > 0.02)
+			else if(range_V > 0.01)
 			{
 				g_range[channelId] = PICO_X1_PROBE_20MV;
 				g_roundedRange[channelId] = 0.02;
@@ -3325,57 +3492,57 @@ void PicoSCPIServer::SetAnalogRange(size_t chIndex, double range_V)
 			if(g_coupling[channelId] == PICO_DC_50OHM)
 				range_V = min(range_V, 5.0);
 
-			if(range_V > 20)
+			if(range_V > 10)
 			{
 				g_range_3000e[channelId] = 20e9;
 				g_roundedRange[channelId] = 20;
 			}
-			else if(range_V > 10)
+			else if(range_V > 5)
 			{
 				g_range_3000e[channelId] = 10e9;
 				g_roundedRange[channelId] = 10;
 			}
-			else if(range_V > 5)
+			else if(range_V > 2)
 			{
 				g_range_3000e[channelId] = 5e9;
 				g_roundedRange[channelId] = 5;
 			}
-			else if(range_V > 2)
+			else if(range_V > 1)
 			{
 				g_range_3000e[channelId] = 2e9;
 				g_roundedRange[channelId] = 2;
 			}
-			else if(range_V > 1)
+			else if(range_V > 0.5)
 			{
 				g_range_3000e[channelId] = 1e9;
 				g_roundedRange[channelId] = 1;
 			}
-			else if(range_V > 0.5)
+			else if(range_V > 0.2)
 			{
 				g_range_3000e[channelId] = 5e8;
 				g_roundedRange[channelId] = 0.5;
 			}
-			else if(range_V > 0.2)
+			else if(range_V > 0.1)
 			{
 				g_range_3000e[channelId] = 2e8;
 				g_roundedRange[channelId] = 0.2;
 			}
-			else if(range_V > 0.1)
+			else if(range_V > 0.05)
 			{
 				g_range_3000e[channelId] = 1e8;
 				g_roundedRange[channelId] = 0.1;
 			}
-			else if(range_V > 0.05)
+			else if(range_V > 0.02)
 			{
 				g_range_3000e[channelId] = 5e7;
 				g_roundedRange[channelId] = 0.05;
 			}
-			else if(range_V > 0.02)
+			else if(range_V > 0.01)
 			{
 				g_range_3000e[channelId] = 2e7;
 				g_roundedRange[channelId] = 0.02;
 			}
-			else if(range_V > 0.01)
+			else if(range_V > 0.005)
 			{
 				g_range_3000e[channelId] = 1e7;
 				g_roundedRange[channelId] = 0.01;
@@ -3415,6 +3582,7 @@ void PicoSCPIServer::SetAnalogOffset(size_t chIndex, double offset_V)
 	switch(g_pico_type)
 	{
 		case PICO2000:
+			//No offset for 2000 series
 			maxoff = 0;
 			minoff = 0;
 			break;
@@ -3424,6 +3592,7 @@ void PicoSCPIServer::SetAnalogOffset(size_t chIndex, double offset_V)
 			minoff = minoff_f;
 			break;
 		case PICO3000:
+			//No offset for 3000 series
 			maxoff = 0;
 			minoff = 0;
 			break;
@@ -3433,6 +3602,7 @@ void PicoSCPIServer::SetAnalogOffset(size_t chIndex, double offset_V)
 			minoff = minoff_f;
 			break;
 		case PICO4000:
+			//No offset for 4000 series
 			maxoff = 0;
 			minoff = 0;
 			break;
@@ -3442,6 +3612,7 @@ void PicoSCPIServer::SetAnalogOffset(size_t chIndex, double offset_V)
 			minoff = minoff_f;
 			break;
 		case PICO5000:
+			//No offset for 5000 series
 			maxoff = 0;
 			minoff = 0;
 			break;
@@ -3451,9 +3622,9 @@ void PicoSCPIServer::SetAnalogOffset(size_t chIndex, double offset_V)
 			minoff = minoff_f;
 			break;
 		case PICO6000:
-			//ps6000GetAnalogueOffset(g_hScope, g_range_6000[channelId], (PS6000_COUPLING)g_coupling[channelId], &maxoff_f, &minoff_f);
-			//maxoff = maxoff_f;
-			//minoff = minoff_f;
+			ps6000GetAnalogueOffset(g_hScope, g_range_6000[channelId], (PS6000_COUPLING)g_coupling[channelId], &maxoff_f, &minoff_f);
+			maxoff = maxoff_f;
+			minoff = minoff_f;
 			break;
 		case PICO6000A:
 			ps6000aGetAnalogueOffsetLimits(g_hScope, g_range[channelId], g_coupling[channelId], &maxoff, &minoff);
@@ -3555,9 +3726,9 @@ void PicoSCPIServer::SetSampleRate(uint64_t rate_hz)
 			if( g_model=="2202" )
 				fmax = 2e6;
 			else if( g_model=="2203" )
-				fmax = 5e9;
+				fmax = 5e6;
 			else if( g_model=="2204" || g_model=="2204A" || g_model=="2104" )
-				fmax = 10e9;
+				fmax = 10e6;
 			else
 				fmax = 25e6;
 			timebase = round(log(fmax/rate_hz)/log(2));
@@ -3730,6 +3901,7 @@ void PicoSCPIServer::SetSampleRate(uint64_t rate_hz)
 			}
 			break;
 		case PICO6000:
+			//Same as 6000A
 			if(period_ns < 5)
 				timebase = round(log(clkdiv)/log(2));
 			else
@@ -3871,11 +4043,11 @@ void UpdateChannel(size_t chan)
 	switch(g_pico_type)
 	{
 		case PICO2000:
-			/*ps2000_set_channel(g_hScope, (PS2000_CHANNEL)chan, g_channelOn[chan],
+			ps2000_set_channel(g_hScope, (PS2000_CHANNEL)chan, g_channelOn[chan],
 							(PS5000A_COUPLING)g_coupling[chan], g_range_2000[chan]);
 			g_scaleValue = PS2000_MAX_VALUE;
 			if(chan == g_triggerChannel)
-				UpdateTrigger();*/
+				UpdateTrigger();
 			break;
 		case PICO2000A:
 			ps2000aSetChannel(g_hScope, (PS2000A_CHANNEL)chan, g_channelOn[chan],
@@ -3890,11 +4062,11 @@ void UpdateChannel(size_t chan)
 				UpdateTrigger();
 			break;
 		case PICO3000:
-			/*ps3000_set_channel(g_hScope, (PS3000_CHANNEL)chan, g_channelOn[chan],
+			ps3000_set_channel(g_hScope, (PS3000_CHANNEL)chan, g_channelOn[chan],
 							(PS5000A_COUPLING)g_coupling[chan], g_range_3000[chan]);
 			g_scaleValue = PS3000_MAX_VALUE;
 			if(chan == g_triggerChannel)
-				UpdateTrigger();*/
+				UpdateTrigger();
 			break;
 		case PICO3000A:
 			ps3000aSetChannel(g_hScope, (PS3000A_CHANNEL)chan, g_channelOn[chan],
@@ -3911,14 +4083,14 @@ void UpdateChannel(size_t chan)
 				UpdateTrigger();
 			break;
 		case PICO4000:
-			/*ps4000SetChannel(g_hScope, (PS4000_CHANNEL)chan, g_channelOn[chan],
+			ps4000SetChannel(g_hScope, (PS4000_CHANNEL)chan, g_channelOn[chan],
 							(PS5000A_COUPLING)g_coupling[chan], g_range_4000[chan]);
 			ps4000SetBwFilter(g_hScope, (PS4000_CHANNEL)chan, g_range_4000[chan]);
 			g_scaleValue = PS4000_MAX_VALUE;
 			if(g_model == "4262")
 				g_scaleValue = PS4262_MAX_VALUE;
 			if(chan == g_triggerChannel)
-				UpdateTrigger();*/
+				UpdateTrigger();
 			break;
 		case PICO4000A:
 			ps4000aSetChannel(g_hScope, (PS4000A_CHANNEL)chan, g_channelOn[chan],
@@ -3958,11 +4130,11 @@ void UpdateChannel(size_t chan)
 				UpdateTrigger();
 			break;
 		case PICO6000:
-			/*ps6000SetChannel(g_hScope, (PS6000_CHANNEL)chan, g_channelOn[chan],
+			ps6000SetChannel(g_hScope, (PS6000_CHANNEL)chan, g_channelOn[chan],
 							(PS6000_COUPLING)g_coupling[chan], g_range_6000[chan], -g_offset[chan], g_bandwidth_6000[chan]);
 			g_scaleValue = PS6000_MAX_VALUE;
 			if(chan == g_triggerChannel)
-				UpdateTrigger();*/
+				UpdateTrigger();
 			break;
 		case PICO6000A:
 			if(g_channelOn[chan])
@@ -3992,6 +4164,7 @@ void UpdateChannel(size_t chan)
 				psospaGetDeviceResolution(g_hScope, &currentRes);
 				psospaGetAdcLimits(g_hScope, currentRes, 0, &scaleVal);
 				g_scaleValue = scaleVal;
+	LogWarning("-: %f\t +: %f\t\n", -g_range_3000e[chan], g_range_3000e[chan]);
 
 				//We use software triggering based on raw ADC codes.
 				//Any time we change the frontend configuration on the trigger channel, it has to be reconfigured.
@@ -4036,6 +4209,10 @@ void UpdateTrigger(bool force)
 			scale = 1;
 	}
 	float trig_code = (g_triggerVoltage - offset) / scale;
+	if(trig_code > 32767)
+		trig_code = 32767;
+	if(trig_code < -32767)
+		trig_code = -32767;
 
 	//This can happen early on during initialization.
 	//Bail rather than dividing by zero.
@@ -4051,7 +4228,7 @@ void UpdateTrigger(bool force)
 	switch(g_pico_type)
 	{
 		case PICO2000:
-			/*if(g_triggerChannel == PICO_TRIGGER_AUX)
+			if(g_triggerChannel == PICO_TRIGGER_AUX)
 			{
 				LogError("PS2000 has no external trigger input\n");
 			}
@@ -4070,7 +4247,7 @@ void UpdateTrigger(bool force)
 			else
 			{
 				LogError("PS2000 has no digital trigger option\n");
-			}*/
+			}
 			break;
 		case PICO2000A:
 			if(g_triggerChannel == PICO_TRIGGER_AUX)
@@ -4079,7 +4256,7 @@ void UpdateTrigger(bool force)
 							  g_hScope,
 							  1,
 							  (PS2000A_CHANNEL)PICO_TRIGGER_AUX,
-							  0,
+							  trunc(trig_code), //0
 							  (enPS2000AThresholdDirection)g_triggerDirection,
 							  delay,
 							  timeout);
@@ -4139,12 +4316,12 @@ void UpdateTrigger(bool force)
 			}
 			break;
 		case PICO3000:
-			/*if(g_triggerChannel == PICO_TRIGGER_AUX)
+			if(g_triggerChannel == PICO_TRIGGER_AUX)
 			{
 				int ret = ps3000_set_trigger(
 							  g_hScope,
 							  PS3000_EXTERNAL,
-							  0,
+							  trunc(trig_code), //0
 							  (PS3000_TDIR)g_triggerDirection,
 							  delay,
 							  timeout);
@@ -4166,7 +4343,7 @@ void UpdateTrigger(bool force)
 			else
 			{
 				LogError("PS3000 has no digital trigger option\n");
-			}*/
+			}
 			break;
 		case PICO3000A:
 			if(g_triggerChannel == PICO_TRIGGER_AUX)
@@ -4229,8 +4406,8 @@ void UpdateTrigger(bool force)
 							  g_hScope,
 							  1,
 							  (PS3000A_CHANNEL)PICO_TRIGGER_AUX,
-							  0,
-							  (enPS3000AThresholdDirection)g_triggerDirection,
+							  trunc(trig_code), //0
+							  (PS3000A_THRESHOLD_DIRECTION)g_triggerDirection,
 							  delay,
 							  timeout);
 				if(ret != PICO_OK)
@@ -4244,7 +4421,7 @@ void UpdateTrigger(bool force)
 							  1,
 							  (PS3000A_CHANNEL)g_triggerChannel,
 							  round(trig_code),
-							  (enPS3000AThresholdDirection)g_triggerDirection, // same as 6000a api
+							  (PS3000A_THRESHOLD_DIRECTION)g_triggerDirection, // same as 6000a api
 							  delay,
 							  timeout);
 				if(ret != PICO_OK)
@@ -4290,18 +4467,18 @@ void UpdateTrigger(bool force)
 			}
 			break;
 		case PICO4000:
-			/*if(g_triggerChannel == PICO_TRIGGER_AUX)
+			if(g_triggerChannel == PICO_TRIGGER_AUX)
 			{
 				int ret = ps4000SetSimpleTrigger(
 							  g_hScope,
 							  1,
 							  PS4000_TRIGGER_AUX,
-							  0,
-							  (THRESHOLD_DIRECTION)g_triggerDirection,
+							  trunc(trig_code), //0
+							  (PS4000_THRESHOLD_DIRECTION)g_triggerDirection,
 							  delay,
 							  timeout);
 				if(ret != PICO_OK)
-					LogError("ps4000_set_trigger failed: %x\n", ret);
+					LogError("ps4000SetSimpleTrigger failed: %x\n", ret);
 			}
 			else if(g_triggerChannel < g_numChannels)
 			{
@@ -4310,16 +4487,16 @@ void UpdateTrigger(bool force)
 							  1,
 							  (PS4000_CHANNEL)g_triggerChannel,
 							  round(trig_code),
-							  (THRESHOLD_DIRECTION)g_triggerDirection,
+							  (PS4000_THRESHOLD_DIRECTION)g_triggerDirection,
 							  delay,
 							  timeout);
 				if(ret != PICO_OK)
-					LogError("ps4000_set_trigger failed: %x\n", ret);
+					LogError("ps4000SetSimpleTrigger failed: %x\n", ret);
 			}
 			else
 			{
 				LogError("PS4000 has no digital trigger option\n");
-			}*/
+			}
 			break;
 		case PICO4000A:
 			if(g_triggerChannel == PICO_TRIGGER_AUX)
@@ -4334,7 +4511,7 @@ void UpdateTrigger(bool force)
 							  1,
 							  (PS4000A_CHANNEL)g_triggerChannel,
 							  round(trig_code),
-							  (enPS4000AThresholdDirection)g_triggerDirection, // same as 6000a api
+							  (PS4000A_THRESHOLD_DIRECTION)g_triggerDirection, // same as 6000a api
 							  delay,
 							  timeout);
 				if(ret != PICO_OK)
@@ -4352,8 +4529,8 @@ void UpdateTrigger(bool force)
 							  g_hScope,
 							  1,
 							  PS5000_TRIGGER_AUX,
-							  0,
-							  (THRESHOLD_DIRECTION)g_triggerDirection,
+							  trunc(trig_code), //0
+							  (PS5000_THRESHOLD_DIRECTION)g_triggerDirection,
 							  delay,
 							  timeout);
 				if(ret != PICO_OK)
@@ -4366,7 +4543,7 @@ void UpdateTrigger(bool force)
 							  1,
 							  (PS5000_CHANNEL)g_triggerChannel,
 							  round(trig_code),
-							  (THRESHOLD_DIRECTION)g_triggerDirection,
+							  (PS5000_THRESHOLD_DIRECTION)g_triggerDirection,
 							  delay,
 							  timeout);
 				if(ret != PICO_OK)
@@ -4384,8 +4561,8 @@ void UpdateTrigger(bool force)
 							  g_hScope,
 							  1,
 							  (PS5000A_CHANNEL)PICO_TRIGGER_AUX,
-							  0,
-							  (enPS5000AThresholdDirection)g_triggerDirection,
+							  trunc(trig_code), //0
+							  (PS5000A_THRESHOLD_DIRECTION)g_triggerDirection,
 							  delay,
 							  timeout);
 				if(ret != PICO_OK)
@@ -4443,13 +4620,13 @@ void UpdateTrigger(bool force)
 			}
 			break;
 		case PICO6000:
-			/*if(g_triggerChannel == PICO_TRIGGER_AUX)
+			if(g_triggerChannel == PICO_TRIGGER_AUX)
 			{
 				int ret = ps6000SetSimpleTrigger(
 							  g_hScope,
 							  1,
 							  PS6000_TRIGGER_AUX,
-							  0,
+							  trunc(trig_code), //0
 							  (PS6000_THRESHOLD_DIRECTION)g_triggerDirection,
 							  delay,
 							  timeout);
@@ -4472,7 +4649,7 @@ void UpdateTrigger(bool force)
 			else
 			{
 				LogError("PS6000 has no digital trigger option\n");
-			}*/
+			}
 			break;
 		case PICO6000A:
 			if(g_triggerChannel == PICO_TRIGGER_AUX)
@@ -4534,7 +4711,7 @@ void UpdateTrigger(bool force)
 							  g_hScope,
 							  1,
 							  PICO_TRIGGER_AUX,
-							  0,
+							  0, //Fixed threshold (2.5V CMOS Hi-Z)
 							  g_triggerDirection,
 							  delay,
 							  timeout);
@@ -4595,11 +4772,60 @@ void UpdateTrigger(bool force)
 		case PICOPSOSPA:
 			if(g_triggerChannel == PICO_TRIGGER_AUX)
 			{
+				/*//Seems external trigger only supports zero crossing???
+				trig_code = 0; //Fixed threshold (3.3V CMOS Hi-Z)
+
+				//Remove old trigger conditions
+				psospaSetTriggerChannelConditions(
+					g_hScope,
+					NULL,
+					0,
+					PICO_CLEAR_ALL);
+
+				//Set up new conditions
+				PICO_CONDITION cond;
+				cond.source = PICO_TRIGGER_AUX;
+				cond.condition = PICO_CONDITION_TRUE;
+				int ret = psospaSetTriggerChannelConditions(
+					g_hScope,
+					&cond,
+					1,
+					PICO_ADD);
+				if(ret != PICO_OK)
+					LogError("psospaSetTriggerChannelConditions failed: %x\n", ret);
+
+				PICO_DIRECTION dir;
+				dir.channel = PICO_TRIGGER_AUX;
+				dir.direction = PICO_RISING;
+				dir.thresholdMode = PICO_LEVEL;
+				ret = psospaSetTriggerChannelDirections(
+					g_hScope,
+					&dir,
+					1);
+				if(ret != PICO_OK)
+					LogError("psospaSetTriggerChannelDirections failed: %x\n", ret);
+
+				PICO_TRIGGER_CHANNEL_PROPERTIES prop;
+				prop.thresholdUpper = trig_code;
+				prop.thresholdUpperHysteresis = 32;
+				prop.thresholdLower = 0;
+				prop.thresholdLowerHysteresis = 0;
+				prop.channel = PICO_TRIGGER_AUX;
+				ret = psospaSetTriggerChannelProperties(
+					g_hScope,
+					&prop,
+					1,
+					0);
+				if(ret != PICO_OK)
+					LogError("psospaSetTriggerChannelProperties failed: %x\n", ret);
+				if(force)
+					LogWarning("Force trigger doesn't currently work if trigger source is external\n");*/
+
 				int ret = psospaSetSimpleTrigger(
 							  g_hScope,
 							  1,
 							  PICO_TRIGGER_AUX,
-							  0,
+							  0, //Fixed threshold (3.3V CMOS Hi-Z)
 							  g_triggerDirection,
 							  delay,
 							  timeout);
@@ -4668,19 +4894,19 @@ void Stop()
 	switch(g_pico_type)
 	{
 		case PICO2000:
-			//ps2000_stop(g_hScope);
+			ps2000_stop(g_hScope);
 			break;
 		case PICO2000A:
 			ps2000aStop(g_hScope);
 			break;
 		case PICO3000:
-			//ps3000_stop(g_hScope);
+			ps3000_stop(g_hScope);
 			break;
 		case PICO3000A:
 			ps3000aStop(g_hScope);
 			break;
 		case PICO4000:
-			//ps4000Stop(g_hScope);
+			ps4000Stop(g_hScope);
 			break;
 		case PICO4000A:
 			ps4000aStop(g_hScope);
@@ -4692,7 +4918,7 @@ void Stop()
 			ps5000aStop(g_hScope);
 			break;
 		case PICO6000:
-			//ps6000Stop(g_hScope);
+			ps6000Stop(g_hScope);
 			break;
 		case PICO6000A:
 			ps6000aStop(g_hScope);
@@ -4716,19 +4942,22 @@ PICO_STATUS StartInternal()
 	switch(g_pico_type)
 	{
 		case PICO2000:
-			//return ps2000_run_block(g_hScope, nPreTrigger_int + nPostTrigger_int, g_timebase, 1, NULL);
+			return PICO_CANCELLED;
+			return ps2000_run_block(g_hScope, nPreTrigger_int + nPostTrigger_int, g_timebase, 1, NULL);
 			break;
 		case PICO2000A:
 			return ps2000aRunBlock(g_hScope, nPreTrigger_int, nPostTrigger_int, g_timebase, 1, NULL, 0, NULL, NULL);
 			break;
 		case PICO3000:
-			//return ps3000_run_block(g_hScope, nPreTrigger_int + nPostTrigger_int, g_timebase, 1, NULL);
+			return PICO_CANCELLED;
+			return ps3000_run_block(g_hScope, nPreTrigger_int + nPostTrigger_int, g_timebase, 1, NULL);
 			break;
 		case PICO3000A:
 			return ps3000aRunBlock(g_hScope, nPreTrigger_int, nPostTrigger_int, g_timebase, 1, NULL, 0, NULL, NULL);
 			break;
 		case PICO4000:
-			//return ps4000RunBlock(g_hScope, nPreTrigger_int, nPostTrigger_int, g_timebase, 1, NULL, 0, NULL, NULL);
+			return PICO_CANCELLED;
+			return ps4000RunBlock(g_hScope, nPreTrigger_int, nPostTrigger_int, g_timebase, 1, NULL, 0, NULL, NULL);
 			break;
 		case PICO4000A:
 			return ps4000aRunBlock(g_hScope, nPreTrigger_int, nPostTrigger_int, g_timebase, NULL, 0, NULL, NULL);
@@ -4740,7 +4969,7 @@ PICO_STATUS StartInternal()
 			return ps5000aRunBlock(g_hScope, nPreTrigger_int, nPostTrigger_int, g_timebase, NULL, 0, NULL, NULL);
 			break;
 		case PICO6000:
-			//return ps6000RunBlock(g_hScope, nPreTrigger_int, nPostTrigger_int, g_timebase, 1, NULL, 0, NULL, NULL);
+			return ps6000RunBlock(g_hScope, nPreTrigger_int, nPostTrigger_int, g_timebase, 1, NULL, 0, NULL, NULL);
 			break;
 		case PICO6000A:
 			return ps6000aRunBlock(g_hScope, nPreTrigger, nPostTrigger, g_timebase, NULL, 0, NULL, NULL);
@@ -4751,7 +4980,6 @@ PICO_STATUS StartInternal()
 		default:
 			//return PICO_OK;
 			return PICO_CANCELLED;
-			break;
 	}
 }
 
