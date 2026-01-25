@@ -2,7 +2,7 @@
 *                                                                                                                      *
 * ps6000d                                                                                                              *
 *                                                                                                                      *
-* Copyright (c) 2012-2026 Andrew D. Zonenberg  and contributors                                                        *
+* Copyright (c) 2012-2026 Andrew D. Zonenberg and contributors                                                         *
 * All rights reserved.                                                                                                 *
 *                                                                                                                      *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the     *
@@ -457,5 +457,8 @@ float InterpolateTriggerTime(int16_t* buf)
 	//no need to divide by time, sample spacing is normalized to 1 timebase unit
 	float slope = (fb - fa);
 	float delta = g_triggerVoltage - fa;
-	return delta / slope;
+	if(slope == 0)
+		return 0;
+	else
+		return delta / slope;
 }
