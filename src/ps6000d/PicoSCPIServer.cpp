@@ -64,6 +64,9 @@
 		[chan]:OFFS [num]
 			Sets channel offset to num volts
 
+		[chan]:OFFS?
+			Returns the channel's offset in volts
+
 		[chan]:ON
 			Turns the channel on
 
@@ -500,6 +503,13 @@ bool PicoSCPIServer::OnQuery(
 					ret = "500";
 				break;
 		}
+		SendReply(ret);
+	}
+
+	else if(cmd == "OFFS")
+	{
+		lock_guard<mutex> lock(g_mutex);
+		string ret = to_string(g_offset[channelId]);
 		SendReply(ret);
 	}
 
