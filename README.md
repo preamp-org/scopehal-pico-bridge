@@ -64,6 +64,7 @@ As of February 2026 there should be a total of **98** individual devices support
 |  | 3406D MSO |  |  |  |  |
 
 Models shown in bold were used for, and tested during, the development of the pico-bridge.
+
 The model **2205 MSO** is only supported with the Pico SDK up to version **2.2.152.6542**, which will continue to be available from the [Downloads > Discontinued products](https://www.picotech.com/downloads) page of the Pico Technology website.
 
 
@@ -95,12 +96,9 @@ The process to build from source is basically [the same as for ngscopeclient](ht
     cd ~ 
     git clone --recursive https://github.com/ngscopeclient/scopehal-pico-bridge
     ```
-
 6.
 	Add your MSYS2 bin folder to your Windows $PATH variable, i.e. "C:\msys64\ucrt64\bin" if you installed it to "C:\msys64".
-
 7.
-
     Build manually:
     ```
     cd scopehal-pico-bridge
